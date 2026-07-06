@@ -42,6 +42,8 @@ Benötigt: Python 3 und Pygame (`pip install pygame`)
 | Taste / Aktion   | Funktion                      |
 |------------------|-------------------------------|
 | Pfeiltasten      | Karte scrollen                |
+| WASD             | Karte scrollen (Alternative)  |
+| Maus an den Rand | Karte automatisch scrollen    |
 | Linke Maustaste  | Gebäude platzieren            |
 | `1`              | Gebäude-Typ: Basis (blau)     |
 | `2`              | Gebäude-Typ: Reaktor (gelb)   |

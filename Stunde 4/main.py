@@ -377,7 +377,7 @@ def info_text_zeichnen():
     
     karten_info = schrift_klein.render(
         f"Karte: {KARTE_BREITE} x {KARTE_HOEHE} Kacheln  |  "
-        f"Pfeiltasten zum Scrollen  |  ESC = Beenden",
+        f"Pfeiltasten / WASD zum Scrollen  |  Maus an den Rand = Auto-Scroll  |  ESC = Beenden",
         True, FARBE_TEXT_DUNKEL
     )
     fenster.blit(karten_info, (15, 45))
@@ -451,15 +451,34 @@ def ereignisse_verarbeiten():
                 gebaeude.gebaeude_platzieren(liste_gebaeude, gebaeude_auswahl,
                                               kachel_x, kachel_y)
         
-    # ── Schritt 2: Gehaltene Tasten prüfen ────────────────────────────
+    # ── Schritt 2: Gehaltene Tasten prüfen (Pfeiltasten UND WASD) ─────
+    # WASD ist in vielen Spielen Standard (linke Hand bleibt auf der
+    # Tastatur, rechte Hand kann die Maus bedienen).
+    #   W = hoch, A = links, S = runter, D = rechts
     gedrueckte_tasten = pygame.key.get_pressed()
-    if gedrueckte_tasten[pygame.K_LEFT]:
+    if gedrueckte_tasten[pygame.K_LEFT] or gedrueckte_tasten[pygame.K_a]:
         kamera_x -= KAMERA_SPEED
-    if gedrueckte_tasten[pygame.K_RIGHT]:
+    if gedrueckte_tasten[pygame.K_RIGHT] or gedrueckte_tasten[pygame.K_d]:
         kamera_x += KAMERA_SPEED
-    if gedrueckte_tasten[pygame.K_UP]:
+    if gedrueckte_tasten[pygame.K_UP] or gedrueckte_tasten[pygame.K_w]:
         kamera_y -= KAMERA_SPEED
-    if gedrueckte_tasten[pygame.K_DOWN]:
+    if gedrueckte_tasten[pygame.K_DOWN] or gedrueckte_tasten[pygame.K_s]:
+        kamera_y += KAMERA_SPEED
+    
+    # ── Schritt 3: Rand-Scrolling mit der Maus ────────────────────────
+    # Wie in Final Earth 2 (und vielen Strategiespielen): Wenn der
+    # Mauszeiger nah an den Bildschirmrand kommt, scrollt die Kamera
+    # automatisch in diese Richtung — ohne dass eine Taste gedrückt wird.
+    RAND_ABSTAND = 25
+    maus_pos_x, maus_pos_y = pygame.mouse.get_pos()
+    
+    if maus_pos_x < RAND_ABSTAND:
+        kamera_x -= KAMERA_SPEED
+    if maus_pos_x > BILD_BREITE - RAND_ABSTAND:
+        kamera_x += KAMERA_SPEED
+    if maus_pos_y < RAND_ABSTAND:
+        kamera_y -= KAMERA_SPEED
+    if maus_pos_y > BILD_HOEHE - RAND_ABSTAND:
         kamera_y += KAMERA_SPEED
     
     kamera_begrenzen()
@@ -482,6 +501,11 @@ def spiel_starten():
     karte_generieren()
     print("Erzeuge Sternenhimmel...")
     sterne_generieren()
+    
+    # Gebäude-Modul initialisieren (Stunde 3) — WICHTIG!
+    # Ohne diesen Aufruf bleibt _fenster in gebaeude.py auf None
+    # und gebaeude_zeichnen() zeichnet dann nichts.
+    gebaeude.gebaeude_initialisieren(fenster, KACHEL_GROESSE)
     
     # HUD-Modul initialisieren (Stunde 4)
     hud.hud_initialisieren(fenster)
