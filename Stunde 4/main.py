@@ -437,7 +437,19 @@ def ereignisse_verarbeiten():
         # pygame.MOUSEBUTTONDOWN wird ausgelöst, wenn der Spieler klickt.
         # Wir fragen die Mausposition ab und berechnen die Kachel.
         # Dann speichern wir ein neues Gebäude in liste_gebaeude.
-        # TODO: Diesen Code in Stunde 3 EINFÜGEN an dieser Stelle:
+        
+        # Mausklick erkennen (linke Maustaste) - platziert ein Gebäude
+        if ereignis.type == pygame.MOUSEBUTTONDOWN:
+            if ereignis.button == 1:  # 1 = linke Maustaste
+                maus_x, maus_y = ereignis.pos
+                # Bildschirm-Position -> Kachel-Position umrechnen
+                # (Kamera-Versatz addieren, dann durch Kachelgröße teilen)
+                kachel_x = (maus_x + kamera_x) // KACHEL_GROESSE
+                kachel_y = (maus_y + kamera_y) // KACHEL_GROESSE
+                # Gebäude über das Modul platzieren lassen
+                # (prüft intern schon ob die Kachel frei ist)
+                gebaeude.gebaeude_platzieren(liste_gebaeude, gebaeude_auswahl,
+                                              kachel_x, kachel_y)
         
     # ── Schritt 2: Gehaltene Tasten prüfen ────────────────────────────
     gedrueckte_tasten = pygame.key.get_pressed()
@@ -488,8 +500,8 @@ def spiel_starten():
         karte_zeichnen()
         
         # STUNDE 3 — GEBÄUDE ZEICHNEN
-        # TODO: Diese Zeile in Stunde 3 HIER EINFÜGEN:
-        # gebaeude_zeichnen(fenster, kamera_x, kamera_y)
+        # Zeichnet alle platzierten Gebäude auf der Karte
+        gebaeude.gebaeude_zeichnen(liste_gebaeude, kamera_x, kamera_y)
         
         # 3. Das HUD — immer zuletzt (liegt ganz oben)
         hud.hud_zeichnen(ressourcen, gebaeude_auswahl, gebaeude.GEBAEUDE_TYPEN,
