@@ -1,6 +1,6 @@
 """
 =============================================================================
-MODUL: ressourcen.py  —  Weltraum-Koloniespiel  (Stunde 6)
+MODUL: ressourcen.py  —  Weltraum-Koloniespiel  (Stunde 6 + 7)
 =============================================================================
 
 Was ist ein Ressourcen-Modul?
@@ -39,6 +39,11 @@ Stunde 6 — NEU dazu:
     ✓ Zwei neue Gebäude: Holzfäller und Steinmetz
     ✓ Neuer Rohstoff: Stein (vierter Rohstoff im Spiel)
     ✓ Wirtschaftsdaten auf 5 Gebäude erweitert (Indizes 0–4)
+
+Stunde 7 — NEU dazu:
+    ✓ Neues Gebäude: Wohnhaus
+    ✓ Neuer Rohstoff: Bevölkerung (fünfter Rohstoff)
+    ✓ Wirtschaftsdaten auf 7 Gebäude erweitert (Indizes 0–6)
 =============================================================================
 """
 
@@ -52,6 +57,8 @@ Stunde 6 — NEU dazu:
 #   Index 2 = Farm        (GEBAEUDE_TYPEN[2])
 #   Index 3 = Holzfäller  (GEBAEUDE_TYPEN[3]) — NEU in Stunde 6
 #   Index 4 = Steinmetz   (GEBAEUDE_TYPEN[4]) — NEU in Stunde 6
+#   Index 5 = Marktplatz  (GEBAEUDE_TYPEN[5])
+#   Index 6 = Wohnhaus    (GEBAEUDE_TYPEN[6]) — NEU in Stunde 7
 #
 # Das ist wichtig: Wenn wir später neue Gebäude hinzufügen, müssen
 # beide Listen erweitert werden — und die Indizes müssen zusammenpassen!
@@ -113,13 +120,24 @@ GEBAEUDE_WIRTSCHAFT = [
         "verbrauch":  {"energie": 3},                 # Verbraucht Energie
         "max_anzahl": None,                           # Beliebig oft baubar
     },
-    # ── Index 5: Marktplatz (Steinverarbeitung) — NEU! ─────────────────────
+    # ── Index 5: Marktplatz (Steinverarbeitung) ────────────────────────────
     # Kostet 30 Gold + 15 Energie, produziert +12 Gold, verbraucht −5 Stein.
     {
         "baukosten":  {"gold": 30, "energie": 15},
         "produktion": {"gold": 12},
         "verbrauch":  {"stein": 5},
         "max_anzahl": None,
+    },
+    # ── Index 6: Wohnhaus (Bevölkerungsproduktion) — NEU in Stunde 7 ──────
+    # Kostet 20 Gold + 15 Holz + 10 Stein, produziert +2 Bevölkerung,
+    # verbraucht −3 Energie.
+    # Je mehr Wohnhäuser, desto mehr Leute ziehen in die Kolonie!
+    # Die Bevölkerung wird als Ressource "bevoelkerung" gespeichert.
+    {
+        "baukosten":  {"gold": 20, "holz": 15, "stein": 10},  # Baukosten
+        "produktion": {"bevoelkerung": 1},                     # Produziert Bevölkerung
+        "verbrauch":  {"energie": 3},                          # Verbraucht Energie
+        "max_anzahl": None,                                    # Beliebig oft baubar
     },
 ]
 
@@ -181,7 +199,8 @@ def kann_bauen(ressourcen_dict, liste_gebaeude, typ_index):
         ressourcen_dict  — das Ressourcen-Dictionary (z.B. {"gold": 100, ...})
         liste_gebaeude   — Liste aller bereits gebauten Gebäude
         typ_index        — welcher Gebäude-Typ soll gebaut werden?
-                           (0=Basis, 1=Reaktor, 2=Farm, 3=Holzfaeller, 4=Steinmetz)
+                           (0=Basis, 1=Reaktor, 2=Farm, 3=Holzfaeller,
+                            4=Steinmetz, 5=Marktplatz, 6=Wohnhaus)
     
     Rückgabe:
         True  — Bauen ist möglich
@@ -215,7 +234,8 @@ def kann_bauen(ressourcen_dict, liste_gebaeude, typ_index):
         if not _hat_genug(ressourcen_dict, ress_name, benoetigt):
             # Gebaeude-Namen aus den Indizes ableiten (ohne Import aus gebaeude.py,
             # um Import-Zirkel zu vermeiden)
-            gebaeude_namen = ["Basis", "Reaktor", "Farm", "Holzfaeller", "Steinmetz"]
+            gebaeude_namen = ["Basis", "Reaktor", "Farm", "Holzfaeller",
+                              "Steinmetz", "Marktplatz", "Wohnhaus"]
             name = gebaeude_namen[typ_index] if typ_index < len(gebaeude_namen) else "Unbekannt"
             print(f"Nicht genug Ressourcen fuer {name}!"
                   f" Brauche {benoetigt} {ress_name}")
@@ -246,13 +266,15 @@ def baukosten_abziehen(ressourcen_dict, typ_index):
     Parameter:
         ressourcen_dict  — das Ressourcen-Dictionary (wird verändert!)
         typ_index        — welcher Gebäude-Typ wird gebaut?
-                          (0=Basis, 1=Reaktor, 2=Farm, 3=Holzfaeller, 4=Steinmetz)
+                           (0=Basis, 1=Reaktor, 2=Farm, 3=Holzfaeller,
+                            4=Steinmetz, 5=Marktplatz, 6=Wohnhaus)
     """
     wirtschaft = GEBAEUDE_WIRTSCHAFT[typ_index]
     baukosten = wirtschaft["baukosten"]
     
     # Gebaeude-Namen aus den Indizes ableiten (ohne Import aus gebaeude.py)
-    gebaeude_namen = ["Basis", "Reaktor", "Farm", "Holzfaeller", "Steinmetz"]
+    gebaeude_namen = ["Basis", "Reaktor", "Farm", "Holzfaeller",
+                      "Steinmetz", "Wohnhaus"]
     name = gebaeude_namen[typ_index] if typ_index < len(gebaeude_namen) else "Unbekannt"
     
     # Gehe durch alle benötigten Ressourcen und ziehe sie ab
@@ -280,6 +302,8 @@ def baukosten_abziehen(ressourcen_dict, typ_index):
 # Neu in Stunde 6: Die Funktion arbeitet automatisch mit allen 5 Gebäudetypen,
 # weil sie einfach durch alle Gebäude in liste_gebaeude iteriert.
 # Man muss nichts umbauen — neue Indizes funktionieren sofort!
+#
+# Neu in Stunde 7: Das gilt auch fürs Wohnhaus — kein Code nötig!
 # ═════════════════════════════════════════════════════════════════════════════
 
 def ressourcen_produzieren(ressourcen_dict, liste_gebaeude):
@@ -338,7 +362,8 @@ def ressourcen_produzieren(ressourcen_dict, liste_gebaeude):
             # Wir brauchen den Namen aus gebaeude.py... aber wir importieren
             # gebaeude.py hier NICHT (sonst gäbe es einen Import-Zirkel).
             # Stattdessen geben wir nur den Index aus — das reicht zum Testen.
-            gebaeude_namen = ["Basis", "Reaktor", "Farm", "Holzfaeller", "Steinmetz"]
+            gebaeude_namen = ["Basis", "Reaktor", "Farm", "Holzfaeller",
+                              "Steinmetz", "Marktplatz", "Wohnhaus"]
             name = gebaeude_namen[typ_index] if typ_index < len(gebaeude_namen) else "Unbekannt"
             print(f"{name} (Typ {typ_index}): Nicht genug Rohstoffe "
                   f"→ produziert nichts in diesem Tick")

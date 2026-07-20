@@ -1,7 +1,7 @@
 """
 =============================================================================
 PROJEKT: Weltraum-Koloniespiel  —  wie FINAL EARTH 2
-STUNDE 6 — Neue Rohstoffe & Gebäude
+STUNDE 7 — Bevölkerung & Wohnungen
 =============================================================================
 
 Worum geht es?
@@ -51,12 +51,11 @@ Bisher gelernt (Stunde 5 — Ressourcen-Logik & Wirtschaft):
     ✓ Basis kann nur 1× gebaut werden
     ✓ Wenn Rohstoffe fehlen → Gebäude produziert nichts
 
-Heute in Stunde 6 lernen wir NEU dazu:
-    ✓ Neuer Rohstoff: Stein (vierte Ressource)
-    ✓ Neues Gebäude: Holzfäller (produziert Holz, verbraucht Energie)
-    ✓ Neues Gebäude: Steinmetz (produziert Stein, verbraucht Energie)
-    ✓ Tasten 4 und 5 für die neuen Gebäude
-    ✓ Vollständiges Rohstoff-System mit 5 Gebäudetypen
+Heute in Stunde 7 lernen wir NEU dazu:
+    ✓ Neuer Rohstoff: Bevölkerung (fünfte Ressource)
+    ✓ Neues Gebäude: Wohnhaus (produziert Bevölkerung, verbraucht Energie)
+    ✓ Taste 7 für das Wohnhaus
+    ✓ Bevölkerung wächst mit jedem Wohnhaus
 
 =============================================================================
 """
@@ -181,7 +180,10 @@ sterne_liste = []
 #
 # Neu in Stunde 6: Der Rohstoff "stein" kommt dazu!
 # Startwert = 20, damit der Steinmetz direkt nach dem Bau loslegen kann.
-ressourcen_dict = {"gold": 100, "energie": 50, "holz": 30, "stein": 20}
+#
+# Neu in Stunde 7: Der Rohstoff "bevoelkerung" kommt dazu!
+# Startwert = 5 — damit die Kolonie nicht ganz leer ist.
+ressourcen_dict = {"gold": 100, "energie": 50, "holz": 30, "stein": 20, "bevoelkerung": 5}
 
 # ├────────────────────────────────────────────────────────────────────────────
 # │ STUNDE 3 — NEUE VARIABLEN                                                 │
@@ -195,8 +197,9 @@ ressourcen_dict = {"gold": 100, "energie": 50, "holz": 30, "stein": 20}
 # └────────────────────────────────────────────────────────────────────────────┘
 
 liste_gebaeude = []       # Alle Gebäude auf der Karte
-# Neu in Stunde 6: 0=Basis, 1=Reaktor, 2=Farm, 3=Holzfaeller, 4=Steinmetz
-gebaeude_auswahl = 0      # Welches Gebäude ist ausgewählt? (0-4)
+# Neu in Stunde 7: 0=Basis, 1=Reaktor, 2=Farm, 3=Holzfaeller,
+#                   4=Steinmetz, 5=Marktplatz, 6=Wohnhaus
+gebaeude_auswahl = 0      # Welches Gebäude ist ausgewählt? (0-5)
 maus_x = 0                # Maus-X-Position auf dem Bildschirm
 maus_y = 0                # Maus-Y-Position auf dem Bildschirm
 klick_x = -1              # Zuletzt angeklickte Kachel (Spalte)
@@ -401,7 +404,8 @@ def ereignisse_verarbeiten():
             if ereignis.key == pygame.K_ESCAPE:
                 return False
             
-            # STUNDE 4 + STUNDE 6 — GEBAEUDE-AUSWAHL MIT TASTEN 1/2/3/4/5
+            # STUNDE 4 + STUNDE 6 + STUNDE 7 — GEBAEUDE-AUSWAHL MIT
+            # TASTEN 1/2/3/4/5/6/7
             # Wie in Final Earth 2 wechselt der Spieler mit Tasten
             # zwischen den Gebäude-Typen.
             #   Taste 1 → Basis       (Index 0)
@@ -409,6 +413,8 @@ def ereignisse_verarbeiten():
             #   Taste 3 → Farm        (Index 2)
             #   Taste 4 → Holzfäller  (Index 3) — NEU in Stunde 6!
             #   Taste 5 → Steinmetz   (Index 4) — NEU in Stunde 6!
+            #   Taste 6 → Marktplatz  (Index 5)
+            #   Taste 7 → Wohnhaus    (Index 6) — NEU in Stunde 7!
             
             if ereignis.key == pygame.K_1:
                 gebaeude_auswahl = 0
@@ -428,6 +434,29 @@ def ereignisse_verarbeiten():
             if ereignis.key == pygame.K_6:
                 gebaeude_auswahl = 5
                 print("Gebäude-Auswahl: Marktplatz (Taste 6)")
+            if ereignis.key == pygame.K_7:
+                gebaeude_auswahl = 6
+                print("Gebäude-Auswahl: Wohnhaus (Taste 7)")
+            
+            # ── STUNDE 7 — NEU: Taste B springt zur Basis ──────────────────
+            # Die Basis ist das erste Gebäude (Index 0).
+            # Wenn der Spieler "B" drückt, suchen wir die Basis in der Liste
+            # und setzen die Kamera direkt darauf — ohne Animation.
+            # Das ist hilfreich bei großen Karten, um schnell zurückzufinden.
+            # Achtung: Die Schleifen-Variable heißt "ein_gebaeude" und NICHT
+            # "gebaeude" — sonst würden wir das importierte Modul überschreiben!
+            if ereignis.key == pygame.K_b:
+                for ein_gebaeude in liste_gebaeude:
+                    if ein_gebaeude["typ"] == 0:  # 0 = Basis
+                        # Mitte der Basis-Kachel berechnen
+                        ziel_x = ein_gebaeude["kachel_x"] * KACHEL_GROESSE
+                        ziel_y = ein_gebaeude["kachel_y"] * KACHEL_GROESSE
+                        # Kamera zentrieren (Fenster-Mitte minus halbe Kachel)
+                        kamera_x = ziel_x - BILD_BREITE // 2 + KACHEL_GROESSE // 2
+                        kamera_y = ziel_y - BILD_HOEHE // 2 + KACHEL_GROESSE // 2
+                        kamera_begrenzen()  # Nicht über den Rand scrollen!
+                        print(f"Kamera zur Basis gesprungen! ({ziel_x}, {ziel_y})")
+                        break  # Nur die erste Basis suchen
 
         # STUNDE 3 — MAUSKLICK ERKENNEN
         # pygame.MOUSEBUTTONDOWN wird ausgelöst, wenn der Spieler klickt.
@@ -584,7 +613,7 @@ if __name__ == "__main__":
 
 
 # =============================================================================
-# ENDE STUNDE 6
+# ENDE STUNDE 7
 # =============================================================================
 # Wiederholung: Was wir heute gelernt haben
 #
@@ -633,7 +662,7 @@ if __name__ == "__main__":
 #   ✓ Basis kann nur 1× gebaut werden
 #   ✓ Baukosten-Anzeige im HUD
 #
-# Stunde 6 (HEUTE NEU):
+# Stunde 6 (Wiederholung):
 #   ✓ Neuer Rohstoff: Stein (vierte Ressource, Startwert 20)
 #   ✓ Neues Gebäude: Holzfäller (Index 3, produziert +6 Holz, kostet 10 Gold + 5 Energie)
 #   ✓ Neues Gebäude: Steinmetz (Index 4, produziert +5 Stein, kostet 15 Gold + 10 Energie)
@@ -642,7 +671,15 @@ if __name__ == "__main__":
 #   ✓ ressourcen_produzieren() funktioniert automatisch für alle Indizes
 #   ✓ gebaeude_zeichnen() funktioniert automatisch — holt Farbe aus GEBAEUDE_TYPEN
 #   ✓ HUD zeigt jetzt 4 Ressourcen: Gold, Energie, Holz, Stein
-#   ✓ Vollständiges Rohstoff-System mit 5 Gebäudetypen
+#
+# Stunde 7 (HEUTE NEU):
+#   ✓ Neuer Rohstoff: Bevölkerung (fünfte Ressource, Startwert 0)
+#   ✓ Neues Gebäude: Wohnhaus (Index 6, produziert +1 Bevölkerung, kostet 20 Gold + 15 Holz + 10 Stein)
+#   ✓ Wohnhaus verbraucht −3 Energie pro Sekunde
+#   ✓ Taste 7 für das Wohnhaus
+#   ✓ GEBAEUDE_TYPEN und GEBAEUDE_WIRTSCHAFT auf 7 Einträge erweitert
+#   ✓ HUD zeigt jetzt 5 Ressourcen: Gold, Energie, Holz, Stein, Bevölkerung
+#   ✓ Je mehr Wohnhäuser, desto mehr Bevölkerung!
 #
 # HÄUFIGE FEHLER zum Merken (alle Stunden):
 #   ✗ spiel_laeuft ≠ spiel_laeuft  → Python sieht das als 2 verschiedene Variablen!
@@ -661,8 +698,8 @@ if __name__ == "__main__":
 #   ✗ GEBAEUDE_TYPEN und GEBAEUDE_WIRTSCHAFT müssen gleiche Länge haben!
 #   ✗ Beim Hinzufügen neuer Gebäude beide Listen gleichzeitig erweitern!
 #
-# Nächste Stunde (Stunde 7):
-#   → Bevölkerung & Wohnungen — neue Gebäude, neue Mechanik
-#   → Neue Gebäude: Wohnhaus (für Bevölkerung)
-#   → Bevölkerung als neue Ressource
+# Nächste Stunde (Stunde 8):
+#   → Gegner, Verteidigung & Wellen
+#   → Feinde greifen die Kolonie an
+#   → Verteidigungsgebäude bauen
 # =============================================================================

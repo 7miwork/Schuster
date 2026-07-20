@@ -1,6 +1,6 @@
 """
 =============================================================================
-MODUL: gebaeude.py  —  Weltraum-Koloniespiel  (Stunde 3 + 6)
+MODUL: gebaeude.py  —  Weltraum-Koloniespiel  (Stunde 3 + 6 + 7)
 =============================================================================
 
 Was ist ein Modul?
@@ -10,7 +10,7 @@ Was ist ein Modul?
 
 Aufgabe dieses Moduls:
     Alles was mit Gebäuden zu tun hat:
-    - Gebäude-Typen definieren (Basis, Reaktor, Farm, Holzfäller, Steinmetz)
+    - Gebäude-Typen definieren (Basis, Reaktor, Farm, Holzfäller, Steinmetz, Marktplatz, Wohnhaus)
     - Gebäude platzieren (Mausklick → Kachel)
     - Gebäude zeichnen (auf der Karte)
 
@@ -30,6 +30,11 @@ Stunde 6 — NEU dazu:
     ✓ Zwei neue Gebäude-Typen: Holzfäller (braun) und Steinmetz (grau)
     ✓ GEBAEUDE_TYPEN hat jetzt 5 statt 3 Einträge
     ✓ Die Zeichen-Funktion funktioniert automatisch für alle Typen
+
+Stunde 7 — NEU dazu:
+    ✓ Neues Gebäude: Wohnhaus (violett) für Bevölkerung
+    ✓ GEBAEUDE_TYPEN hat jetzt 7 Einträge (0-6)
+    ✓ Die Zeichen-Funktion funktioniert weiterhin automatisch!
 =============================================================================
 """
 
@@ -51,10 +56,13 @@ import pygame
 #   GEBAEUDE_TYPEN[2] = Farm
 #   GEBAEUDE_TYPEN[3] = Holzfäller  — NEU in Stunde 6
 #   GEBAEUDE_TYPEN[4] = Steinmetz   — NEU in Stunde 6
+#   GEBAEUDE_TYPEN[5] = Marktplatz
+#   GEBAEUDE_TYPEN[6] = Wohnhaus    — NEU in Stunde 7
 #
 # Wichtig: In ressourcen.py gibt es GEBAEUDE_WIRTSCHAFT mit demselben Index!
 #   Index 3 in beiden = Holzfäller
 #   Index 4 in beiden = Steinmetz
+#   Index 6 in beiden = Wohnhaus (Stunde 7)
 # ═════════════════════════════════════════════════════════════════════════════
 
 GEBAEUDE_TYPEN = [
@@ -85,12 +93,20 @@ GEBAEUDE_TYPEN = [
         "farbe":   (140, 140, 150),   # Hellgrau — Steinverarbeitung
         "kuerzel": "S",
     },
-    # ── Index 5: Marktplatz (NEU!) ─────────────────────────────────────────
+    # ── Index 5: Marktplatz ────────────────────────────────────────────────
     {
         "name":    "Marktplatz",
         "farbe":   (220, 180, 80),    # Sandgold — Handel und Gold
         "kuerzel": "M",
-    },      
+    },
+    # ── Index 6: Wohnhaus (NEU in Stunde 7) ───────────────────────────────
+    # Das Wohnhaus produziert Bevölkerung — je mehr Wohnhäuser, desto mehr
+    # Leute ziehen in die Kolonie!
+    {
+        "name":    "Wohnhaus",
+        "farbe":   (180, 180, 200),   # Fast Violett — Wohnungen für die Leute
+        "kuerzel": "V",
+    },
 ]
 
 
@@ -142,7 +158,7 @@ def gebaeude_platzieren(liste_gebaeude, typ_index, kachel_x, kachel_y):
     
     Parameter:
         liste_gebaeude — die Gebäude-Liste aus main.py (wird verändert!)
-        typ_index      — welcher Gebäude-Typ (0=Basis, 1=Reaktor, ..., 4=Steinmetz)
+        typ_index      — welcher Gebäude-Typ (0=Basis, 1=Reaktor, ..., 6=Wohnhaus)
         kachel_x       — x-Position auf der Karte (in Kacheln)
         kachel_y       — y-Position auf der Karte (in Kacheln)
     """
@@ -185,6 +201,8 @@ def gebaeude_zeichnen(liste_gebaeude, kamera_x, kamera_y):
     die neuen Gebäude-Typen Holzfäller und Steinmetz — denn sie holt
     sich die Farbe und das Kürzel einfach aus GEBAEUDE_TYPEN[typ_index].
     Man muss die Zeichen-Funktion nicht ändern, nur die Daten!
+    
+    Neu in Stunde 7: Das gilt auch fürs Wohnhaus — kein Code nötig!
     
     Parameter:
         liste_gebaeude — Liste aller platzierten Gebäude
