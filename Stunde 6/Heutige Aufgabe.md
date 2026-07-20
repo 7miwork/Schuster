@@ -82,17 +82,3 @@ einen neuen Block hinzu:
 Marktplätze baut, aber der Steinmetz nicht hinterherkommt? Testet es aus!
 
 ---
-
-## Für die Lehrkraft — Musterlösung / Ablauf
-
-- Reine "Daten hinzufügen"-Aufgabe, kein neuer Code-Mechanismus nötig
-- Gute Gelegenheit zu zeigen: **HUD-Ressourcenleiste und Zeichnen-Funktion
-  ändern sich nicht** — weil sie generisch über alle Einträge loopen
-  (`for res in ressourcen_typen`, `gebaeude_zeichnen()` liest Farbe/Kürzel
-  automatisch aus der Liste)
-- Erwartete Bearbeitungszeit: 10–15 Minuten
-- Häufigster Fehler: Index in `gebaeude.py` und `ressourcen.py` stimmt
-  nicht überein → falsches Gebäude bekommt falsche Wirtschaftsdaten
-- Erweiterung für sehr schnelle Schüler: eigene Baukosten/Werte
-  ausbalancieren, oder gleich Idee aus `Ideen und Fehler.md` aufgreifen
-  ("Handelszentrum/Marktplatz → NPC Trade")
