@@ -158,6 +158,15 @@ def _ressourcen_leiste_zeichnen(ressourcen):
             "text_pos": (480, 12),
             "schluessel": "bevoelkerung",
         },
+        # ── Index 5: Nahrung — NEU in Stunde 8 ──────────────────────────────
+        # Farmen produzieren Nahrung für die Bevölkerung.
+        {
+            "name":     "Nahrung",
+            "farbe":    (255, 140, 0),       # Orange — Essen-Farbe
+            "icon_pos": (620, 15),
+            "text_pos": (635, 12),
+            "schluessel": "nahrung",
+        },
     ]
     
     # ── Hintergrund für die Leiste zeichnen ──────────────────────────────
@@ -245,6 +254,8 @@ def _gebaeude_auswahl_zeichnen(gebaeude_auswahl, gebaeude_typen,
                 kosten_teile.append(f"{menge} Holz")
             elif ress_name == "stein":
                 kosten_teile.append(f"{menge} Stein")
+            elif ress_name == "nahrung":
+                kosten_teile.append(f"{menge} Nahrung")
             else:
                 kosten_teile.append(f"{menge} {ress_name}")
         kosten_string = " + ".join(kosten_teile)

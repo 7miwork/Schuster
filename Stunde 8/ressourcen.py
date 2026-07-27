@@ -85,59 +85,63 @@ GEBAEUDE_WIRTSCHAFT = [
         "max_anzahl": 1,                       # Nur 1× baubar
     },
     # ── Index 1: Reaktor (Energieproduktion) ──────────────────────────────
-    # Kostet 20 Gold, produziert +5 Energie, verbraucht −2 Holz.
+    # Kostet 20 Gold, produziert +5 Energie, verbraucht −2 Holz + 1 Arbeiter.
     # Kann beliebig oft gebaut werden (max_anzahl = None).
     {
         "baukosten":  {"gold": 20},            # Baukosten
         "produktion": {"energie": 5},          # Produziert Energie
-        "verbrauch":  {"holz": 2},             # Verbraucht Holz
+        "verbrauch":  {"holz": 2, "arbeiter": 1},  # Verbraucht Holz + Arbeiter
         "max_anzahl": None,                    # Beliebig oft baubar
     },
-    # ── Index 2: Farm (Geldproduktion) ────────────────────────────────────
-    # Kostet 15 Gold + 10 Energie, produziert +8 Gold, verbraucht −3 Energie.
+    # ── Index 2: Farm (Nahrungsproduktion) ─────────────────────────────────
+    # Kostet 15 Gold + 10 Energie, produziert +5 Nahrung,
+    # verbraucht −2 Energie + 1 Arbeiter.
     # Kann beliebig oft gebaut werden (max_anzahl = None).
     {
         "baukosten":  {"gold": 15, "energie": 10},   # Baukosten
-        "produktion": {"gold": 8},                    # Produziert Gold
-        "verbrauch":  {"energie": 3},                 # Verbraucht Energie
+        "produktion": {"nahrung": 5},                 # Produziert Nahrung
+        "verbrauch":  {"energie": 2, "arbeiter": 1}, # Verbraucht Energie + Arbeiter
         "max_anzahl": None,                           # Beliebig oft baubar
     },
     # ── Index 3: Holzfäller (Holzproduktion) — NEU in Stunde 6 ────────────
-    # Kostet 10 Gold + 5 Energie, produziert +6 Holz, verbraucht −2 Energie.
+    # Kostet 10 Gold + 5 Energie, produziert +6 Holz,
+    # verbraucht −2 Energie + 1 Arbeiter.
     # Der Holzfäller liefert Holz — das brauchen wir für Reaktoren!
     {
         "baukosten":  {"gold": 10, "energie": 5},    # Baukosten
         "produktion": {"holz": 6},                    # Produziert Holz
-        "verbrauch":  {"energie": 2},                 # Verbraucht Energie
+        "verbrauch":  {"energie": 2, "arbeiter": 1}, # Verbraucht Energie + Arbeiter
         "max_anzahl": None,                           # Beliebig oft baubar
     },
     # ── Index 4: Steinmetz (Steinproduktion) — NEU in Stunde 6 ────────────
-    # Kostet 15 Gold + 10 Energie, produziert +5 Stein, verbraucht −3 Energie.
+    # Kostet 15 Gold + 10 Energie, produziert +5 Stein,
+    # verbraucht −3 Energie + 1 Arbeiter.
     # Stein ist ein neuer Rohstoff — wird für spätere Gebäude wichtig!
     {
         "baukosten":  {"gold": 15, "energie": 10},   # Baukosten
         "produktion": {"stein": 5},                   # Produziert Stein
-        "verbrauch":  {"energie": 3},                 # Verbraucht Energie
+        "verbrauch":  {"energie": 3, "arbeiter": 1}, # Verbraucht Energie + Arbeiter
         "max_anzahl": None,                           # Beliebig oft baubar
     },
     # ── Index 5: Marktplatz (Steinverarbeitung) ────────────────────────────
-    # Kostet 30 Gold + 15 Energie, produziert +12 Gold, verbraucht −5 Stein.
+    # Kostet 30 Gold + 15 Energie, produziert +12 Gold,
+    # verbraucht −5 Stein + 2 Arbeiter.
     {
         "baukosten":  {"gold": 30, "energie": 15},
         "produktion": {"gold": 12},
-        "verbrauch":  {"stein": 5},
+        "verbrauch":  {"stein": 5, "arbeiter": 2},
         "max_anzahl": None,
     },
-    # ── Index 6: Wohnhaus (Bevölkerungsproduktion) — NEU in Stunde 7 ──────
-    # Kostet 20 Gold + 15 Holz + 10 Stein, produziert +2 Bevölkerung,
-    # verbraucht −3 Energie.
-    # Je mehr Wohnhäuser, desto mehr Leute ziehen in die Kolonie!
+    # ── Index 6: Wohnhaus (Bevölkerungsproduktion) — Limit: 10 ─────────────
+    # Kostet 20 Gold + 15 Holz + 10 Stein, produziert +1 Bevölkerung,
+    # verbraucht −3 Energie und −2 Nahrung.
+    # Maximum 10 Wohnhäuser — dann ist die Kolonie voll!
     # Die Bevölkerung wird als Ressource "bevoelkerung" gespeichert.
     {
         "baukosten":  {"gold": 20, "holz": 15, "stein": 10},  # Baukosten
-        "produktion": {"bevoelkerung": 2},                     # Produziert Bevölkerung
-        "verbrauch":  {"energie": 3},                          # Verbraucht Energie
-        "max_anzahl": None,                                    # Beliebig oft baubar
+        "produktion": {"bevoelkerung": 1},                     # Produziert Bevölkerung
+        "verbrauch":  {"energie": 3, "nahrung": 2},           # Verbraucht Energie + Nahrung
+        "max_anzahl": 10,                                      # Maximum 10 Wohnhäuser
     },
 ]
 
@@ -187,13 +191,14 @@ def _hat_genug(ressourcen_dict, ressourcen_name, benoetigte_menge):
 # In main.py wird dann entschieden: bei True → bauen, bei False → nichts tun.
 # ═════════════════════════════════════════════════════════════════════════════
 
-def kann_bauen(ressourcen_dict, liste_gebaeude, typ_index):
+def kann_bauen(ressourcen_dict, liste_gebaeude, typ_index, boden_typ=None):
     """
     Prüft ob ein Gebäude gebaut werden kann.
     
-    Zwei Prüfungen:
+    Drei Prüfungen:
     1. Basis-Check (Index 0): Darf nur 1× gebaut werden!
     2. Ressourcen-Check: Sind genug Ressourcen für die Baukosten da?
+    3. Boden-Check (NEU in Stunde 8): Passt der Bodentyp zum Gebäude?
     
     Parameter:
         ressourcen_dict  — das Ressourcen-Dictionary (z.B. {"gold": 100, ...})
@@ -201,11 +206,39 @@ def kann_bauen(ressourcen_dict, liste_gebaeude, typ_index):
         typ_index        — welcher Gebäude-Typ soll gebaut werden?
                            (0=Basis, 1=Reaktor, 2=Farm, 3=Holzfaeller,
                             4=Steinmetz, 5=Marktplatz, 6=Wohnhaus)
+        boden_typ        — (Optional) Bodentyp der Kachel (0=Erde, 1=Gras, 2=Gestein, 3=Sand)
+                           Wenn None, wird keine Boden-Prüfung durchgeführt.
     
     Rückgabe:
         True  — Bauen ist möglich
         False — Bauen nicht möglich (Grund wird in der Konsole ausgegeben)
     """
+    # ── Prüfung 3 (NEU in Stunde 8): Passt der Bodentyp zum Gebäude? ─────
+    # Jedes Gebäude hat einen bevorzugten Bodentyp:
+    #   - Farm (2) und Holzfäller (3) brauchen GRAS (1)
+    #   - Steinmetz (4) braucht GESTEIN (2)
+    #   - Basis, Reaktor, Marktplatz, Wohnhaus können überall gebaut werden
+    if boden_typ is not None:
+        # Definiere welche Gebäude welchen Boden brauchen
+        boden_anforderung = {
+            2: 1,  # Farm → Gras (Bodentyp 1)
+            3: 1,  # Holzfäller → Gras (Bodentyp 1)
+            4: 2,  # Steinmetz → Gestein (Bodentyp 2)
+        }
+        
+        # Prüfe ob dieses Gebäude eine Boden-Anforderung hat
+        if typ_index in boden_anforderung:
+            benoetigter_boden = boden_anforderung[typ_index]
+            if boden_typ != benoetigter_boden:
+                gebaeude_namen = ["Basis", "Reaktor", "Farm", "Holzfaeller",
+                                  "Steinmetz", "Marktplatz", "Wohnhaus"]
+                name = gebaeude_namen[typ_index] if typ_index < len(gebaeude_namen) else "Unbekannt"
+                boden_namen = {0: "Erde", 1: "Gras", 2: "Gestein", 3: "Sand"}
+                benoetigt_name = boden_namen.get(benoetigter_boden, "Unbekannt")
+                print(f"{name} kann nur auf {benoetigt_name} gebaut werden!"
+                      f" (aktuell: {boden_namen.get(boden_typ, 'Unbekannt')})")
+                return False
+    
     # ── Prüfung 1: Darf dieses Gebäude nur 1× gebaut werden? ────────────
     # Hol die Wirtschaftsdaten für diesen Gebäude-Typ
     wirtschaft = GEBAEUDE_WIRTSCHAFT[typ_index]

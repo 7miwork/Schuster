@@ -182,8 +182,14 @@ sterne_liste = []
 # Startwert = 20, damit der Steinmetz direkt nach dem Bau loslegen kann.
 #
 # Neu in Stunde 7: Der Rohstoff "bevoelkerung" kommt dazu!
-# Startwert = 5 — damit die Kolonie nicht ganz leer ist.
-ressourcen_dict = {"gold": 100, "energie": 50, "holz": 30, "stein": 20, "bevoelkerung": 0}
+# Startwert = 0 — damit die Kolonie nicht ganz leer ist.
+# Neu in Stunde 7: Der Rohstoff "bevoelkerung" kommt dazu!
+# Startwert = 10 — damit der Spieler direkt ein paar Arbeiter hat
+# für die ersten Produktionsgebäude.
+#
+# Neu in Stunde 8: Der Rohstoff "nahrung" kommt dazu!
+# Startwert = 50 — damit die ersten Wohnhäuser versorgt werden können.
+ressourcen_dict = {"gold": 100, "energie": 50, "holz": 30, "stein": 20, "bevoelkerung": 10, "nahrung": 50}
 
 # ├────────────────────────────────────────────────────────────────────────────
 # │ STUNDE 3 — NEUE VARIABLEN                                                 │
@@ -211,7 +217,13 @@ klick_y = -1              # Zuletzt angeklickte Kachel (Zeile)
 # Wenn tick_zaehler 60 erreicht, rufen wir ressourcen_produzieren() auf
 # und setzen den Zähler zurück auf 0.
 # So läuft die Wirtschaft 1× pro Sekunde — nicht jeden Frame!
+#
+# Neu in Stunde 8: spiel_geschwindigkeit für Pause/Start/Beschleunigen
+#   1 = normal (1× pro Sekunde)
+#   0 = pausiert
+#   2 = doppelt so schnell (alle 30 Frames)
 tick_zaehler = 0
+spiel_geschwindigkeit = 1   # Normal-Geschwindigkeit
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -438,6 +450,21 @@ def ereignisse_verarbeiten():
                 gebaeude_auswahl = 6
                 print("Gebäude-Auswahl: Wohnhaus (Taste 7)")
             
+            # ── STUNDE 8 — NEU: Pause/Start/Beschleunigung ─────────────────
+            # Mit der Leertaste kann pausiert werden
+            # Mit Taste 1 und 2 wird die Geschwindigkeit angepasst
+            if ereignis.key == pygame.K_SPACE:
+                global spiel_geschwindigkeit
+                spiel_geschwindigkeit = 1 if spiel_geschwindigkeit == 0 else 0
+                status = "pausiert" if spiel_geschwindigkeit == 0 else "gestartet"
+                print(f"Spiel {status}!")
+            if ereignis.key == pygame.K_1:
+                spiel_geschwindigkeit = 1
+                print("Normale Geschwindigkeit (1×)")
+            if ereignis.key == pygame.K_2:
+                spiel_geschwindigkeit = 2
+                print("Doppelte Geschwindigkeit (2×)")
+            
             # ── STUNDE 7 — NEU: Taste B springt zur Basis ──────────────────
             # Die Basis ist das erste Gebäude (Index 0).
             # Wenn der Spieler "B" drückt, suchen wir die Basis in der Liste
@@ -479,13 +506,21 @@ def ereignisse_verarbeiten():
                 kachel_x = (maus_x + kamera_x) // KACHEL_GROESSE
                 kachel_y = (maus_y + kamera_y) // KACHEL_GROESSE
                 
+                # ── STUNDE 8: Boden-Typ der Kachel prüfen ──────────────────
+                # Hole den Bodentyp der angeklickten Kachel
+                if 0 <= kachel_y < KARTE_HOEHE and 0 <= kachel_x < KARTE_BREITE:
+                    boden_typ = karten_daten[kachel_y][kachel_x]
+                else:
+                    boden_typ = None  # Außerhalb der Karte
+                
                 # ── STUNDE 5: Baukosten prüfen vor dem Bauen ──────────────
                 # kann_bauen() prüft:
                 #   - Darf die Basis nur 1× gebaut werden?
                 #   - Sind genug Ressourcen für die Baukosten da?
                 # Neu in Stunde 6: Funktioniert automatisch für alle 5 Typen!
+                # Neu in Stunde 8: Prüft auch ob der Bodentyp passt!
                 if ressourcen.kann_bauen(ressourcen_dict, liste_gebaeude,
-                                          gebaeude_auswahl):
+                                          gebaeude_auswahl, boden_typ):
                     # Baukosten von den Ressourcen abziehen
                     ressourcen.baukosten_abziehen(ressourcen_dict,
                                                    gebaeude_auswahl)
@@ -496,7 +531,8 @@ def ereignisse_verarbeiten():
                 else:
                     # kann_bauen() hat False zurückgegeben
                     # Der Grund steht schon in der Konsolenausgabe
-                    # (z.B. "Nicht genug Ressourcen fuer Holzfaeller!")
+                    # (z.B. "Nicht genug Ressourcen fuer Holzfaeller!"
+                    #  oder "Farm kann nur auf Gras gebaut werden!")
                     # Hier passiert nichts — kein Gebäude wird platziert
                     pass
         
@@ -570,17 +606,23 @@ def spiel_starten():
     while laeuft:
         laeuft = ereignisse_verarbeiten()
         
-        # ── TICK-SYSTEM — 1× pro Sekunde ─────────────────────────────────
+        # ── TICK-SYSTEM — 1× pro Sekunde (abhängig von Geschwindigkeit) ─────
         # tick_zaehler zählt die Frames (Bilder pro Sekunde).
         # Bei 60 FPS: 60 Frames = 1 Sekunde.
         # Wenn tick_zaehler 60 erreicht → produzieren → zurücksetzen.
         # Neu in Stunde 6: Auch Holzfäller und Steinmetz produzieren jetzt!
-        tick_zaehler = tick_zaehler + 1
-        if tick_zaehler >= 60:   # 60 Frames = 1 Sekunde
-            tick_zaehler = 0
-            # Alle Gebäude produzieren/verbrauchen jetzt Ressourcen
-            ressourcen.ressourcen_produzieren(ressourcen_dict,
-                                               liste_gebaeude)
+        # Neu in Stunde 8: Die Geschwindigkeit ist einstellbar:
+        #   spiel_geschwindigkeit = 1 → 60 Frames (normal)
+        #   spiel_geschwindigkeit = 2 → 30 Frames (doppelt)
+        #   spiel_geschwindigkeit = 0 → pausiert
+        global tick_zaehler, spiel_geschwindigkeit
+        if spiel_geschwindigkeit > 0:
+            tick_zaehler = tick_zaehler + 1
+            if tick_zaehler >= 60 // spiel_geschwindigkeit:
+                tick_zaehler = 0
+                # Alle Gebäude produzieren/verbrauchen jetzt Ressourcen
+                ressourcen.ressourcen_produzieren(ressourcen_dict,
+                                                   liste_gebaeude)
         
         # ZEICHNEN (RENDERING)
         hintergrund_zeichnen()
