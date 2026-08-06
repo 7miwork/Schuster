@@ -63,13 +63,13 @@ Ein Projekt für Unterrichtsorganisation und Lernmodule.
 
 - [x] Grundstruktur erstellt
 - [x] Stunde 1 – Das Fundament
-- [ ] Stunde 2 – Die Mondkarte und Kamera-Scroll
-- [ ] Stunde 3
-- [ ] Stunde 4
-- [ ] Stunde 5
-- [ ] Stunde 6
-- [ ] Stunde 7
-- [ ] Stunde 8
+- [x] Stunde 2 – Die Mondkarte und Kamera-Scroll
+- [x] Stunde 3
+- [x] Stunde 4
+- [x] Stunde 5
+- [x] Stunde 6
+- [x] Stunde 7
+- [x] Stunde 8
 - [ ] Stunde 9
 - [ ] Stunde 10
 - [ ] Stunde 11

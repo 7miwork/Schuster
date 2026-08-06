@@ -27,10 +27,11 @@
 | 6      | Neue Rohstoffe & Gebäude (Stein, Holzfäller, Steinmetz) | `main.py`, `gebaeude.py`, `ressourcen.py`, `hud.py` | ✅ fertig |
 | 7      | Bevölkerung & Wohnungen           | `main.py`, `gebaeude.py`, `ressourcen.py`, `hud.py` | ✅ fertig   |
 | 8      | Ideen, Fehlerbehebung                   | `main.py`, `hud.py,`, `ressourcen.py`                 | ✅ fertig |
-| 9      | Forschung & Technologien          | `main.py`, `forschung.py`              | 🔜 geplant |
-| 10     | Baumenü per Maus, Start-/Pause-Bildschirm | `main.py`, `hud.py`, `menu.py`   | 🔜 geplant |
-| 11     | Sieg-/Niederlage-Bedingungen, Speichern & Laden | `main.py`, `speicherstand.py` | 🔜 geplant |
-| 12     | Feinschliff, Balancing, Bugfixing — fertiges Spiel | alle Dateien              | 🔜 geplant |
+| 9      | Gebäude abreißen, Baumenü, Freischaltung, Feedback-Meldungen | `main.py`, `gebaeude.py`, `ressourcen.py`, `hud.py`, `menu.py` | ✅ fertig |
+| 10     | Forschung & Technologien             | `main.py`, `forschung.py`              | 🔜 geplant |
+| 11     | Baumenü verfeinern, Start-/Pause-Bildschirm | `main.py`, `hud.py`, `menu.py`   | 🔜 geplant |
+| 12     | Sieg-/Niederlage-Bedingungen, Speichern & Laden | `main.py`, `speicherstand.py` | 🔜 geplant |
+| 13     | Feinschliff, Balancing, Bugfixing — fertiges Spiel | alle Dateien              | 🔜 geplant |
 
 | XX     | Gegner, Verteidigung & Wellen                   | `main.py`, `gegner.py`                 | 🔜 geplant |
 
@@ -53,7 +54,7 @@ Benötigt: Python 3 und Pygame (`pip install pygame`)
 
 ---
 
-## Steuerung (Stand Stunde 7)
+## Steuerung (Stand Stunde 9)
 
 | Taste / Aktion   | Funktion                      |
 |------------------|-------------------------------|
@@ -61,6 +62,8 @@ Benötigt: Python 3 und Pygame (`pip install pygame`)
 | WASD             | Karte scrollen (Alternative)  |
 | Maus an den Rand | Karte automatisch scrollen    |
 | Linke Maustaste  | Gebäude platzieren (kostet Ressourcen!) |
+| **Rechte Maustaste** | **Gebäude abreißen (50 % der Baukosten zurück!) — NEU!** |
+| **`TAB`**        | **Baumenü öffnen/schließen (zeigt alle Gebäudetypen) — NEU!** |
 | `1`              | Gebäude-Typ: Basis (blau)     |
 | `2`              | Gebäude-Typ: Reaktor (gelb)   |
 | `3`              | Gebäude-Typ: Farm (grün)      |
@@ -71,21 +74,23 @@ Benötigt: Python 3 und Pygame (`pip install pygame`)
 | `B`              | Kamera sofort zur Basis zentrieren |
 | `ESC`            | Spiel beenden                 |
 
+> **Neu in Stunde 9:** Rechtsklick reißt ein Gebäude ab (die Basis kann nicht abgerissen werden!). `TAB` öffnet das Baumenü, in dem alle Gebäudetypen mit Baukosten und Freischaltung zu sehen sind.
+
 > **Neu in Stunde 7:** Taste 7 wählt das Wohnhaus aus. Bauen kostet Gold, Holz und Stein. Wohnhäuser produzieren Bevölkerung — die neue fünfte Ressource! Mit Tasten 1–7 wählst du zwischen 7 Gebäude-Typen.
 
 ---
 
 ## Gebäude-Typen
 
-| Kürzel | Name        | Farbe       | Baukosten              | Produziert/Sek. | Verbraucht/Sek. | Max. Anzahl |
-|--------|-------------|-------------|------------------------|-----------------|-----------------|-------------|
-| B      | Basis       | Hellblau    | Kostenlos              | –               | –               | 1× pro Spiel |
-| R      | Reaktor     | Gelb-Orange | 20 Gold                | +5 Energie      | −2 Holz         | unbegrenzt  |
-| F      | Farm        | Grün        | 15 Gold + 10 Energie   | +8 Gold         | −3 Energie      | unbegrenzt  |
-| H      | Holzfäller  | Braun       | 10 Gold + 5 Energie    | +6 Holz         | −2 Energie      | unbegrenzt  |
-| S      | Steinmetz   | Grau        | 15 Gold + 10 Energie   | +5 Stein        | −3 Energie      | unbegrenzt  |
-| M      | Marktplatz  | Sandgold    | 30 Gold + 15 Energie   | +12 Gold        | −5 Stein        | unbegrenzt  |
-| W      | Wohnhaus    | Violett     | 20 Gold + 15 Holz + 10 Stein | +2 Bevölkerung | −3 Energie | unbegrenzt  |
+| Kürzel | Name        | Farbe       | Baukosten              | Produziert/Sek. | Verbraucht/Sek. | Max. Anzahl | Freigeschaltet ab (St. 9) |
+|--------|-------------|-------------|------------------------|-----------------|-----------------|-------------|---------------------------|
+| B      | Basis       | Hellblau    | Kostenlos              | –               | –               | 1× pro Spiel | Sofort |
+| R      | Reaktor     | Gelb-Orange | 20 Gold                | +5 Energie      | −2 Holz         | unbegrenzt  | Sofort |
+| F      | Farm        | Grün        | 15 Gold + 10 Energie   | +8 Gold         | −3 Energie      | unbegrenzt  | Sofort |
+| H      | Holzfäller  | Braun       | 10 Gold + 5 Energie    | +6 Holz         | −2 Energie      | unbegrenzt  | Sofort |
+| S      | Steinmetz   | Grau        | 15 Gold + 10 Energie   | +5 Stein        | −3 Energie      | unbegrenzt  | Sofort |
+| M      | Marktplatz  | Sandgold    | 30 Gold + 15 Energie   | +12 Gold        | −5 Stein        | unbegrenzt  | ab **5 Bevölkerung** |
+| W      | Wohnhaus    | Violett     | 20 Gold + 15 Holz + 10 Stein | +2 Bevölkerung | −3 Energie | unbegrenzt  | ab **20 Holz** |
 
 > **Wichtig:** Wenn der nötige Rohstoff zum Verbrauchen fehlt (z.B. keine Energie für den Holzfäller), produziert das Gebäude in diesem Tick NICHTS. Ressourcenwerte fallen nie unter 0!
 
@@ -120,3 +125,13 @@ Das Spiel hat jetzt **5 Rohstoffe**, die miteinander verbunden sind:
 **Stunde 5:** Tick-System (Frame-Zähler, 1× pro Sekunde produzieren), Ressourcenproduktion und -verbrauch pro Gebäude, Baukosten prüfen vor dem Bauen (`kann_bauen()`), Baukosten automatisch abziehen (`baukosten_abziehen()`), Modul-Kopplung zwischen `gebaeude.py` und `ressourcen.py` über gemeinsame Indizes, Basis kann nur 1× gebaut werden, Gebäude produziert nichts bei fehlenden Rohstoffen, Baukosten-Anzeige im HUD
 
 **Stunde 6:** Neue Rohstoffe und Gebäude hinzufügen (Stein als vierte Ressource, Holzfäller und Steinmetz als neue Gebäude), Tabellen erweitern (sowohl `GEBAEUDE_TYPEN` in `gebaeude.py` als auch `GEBAEUDE_WIRTSCHAFT` in `ressourcen.py` müssen gleichzeitig wachsen), Tastenhandling erweitern (neue `if`-Blöcke für Taste 4 und 5), HUD erweitern (vierte Ressource in der Leiste), `ressourcen_produzieren()` funktioniert automatisch für neue Indizes — keine Änderung nötig! `gebaeude_zeichnen()` funktioniert automatisch — holt Farbe und Kürzel aus der Liste
+
+**Stunde 7:** Fünfter Rohstoff Bevölkerung, neues Gebäude Wohnhaus, `GEBAEUDE_TYPEN` und `GEBAEUDE_WIRTSCHAFT` auf 7 Einträge erweitert, HUD zeigt 5 Ressourcen
+
+**Stunde 9 (NEU):** Diese Stunde setzt die Verbesserungsvorschläge der Schüler um:
+- **Gebäude abreißen** mit Rechtsklick (`gebaeude_abreissen()`), dabei 50 % der Baukosten zurück (`ressourcen_zurueckerstatten()`, abgerundet mit `kosten // 2`). Die Basis kann nicht abgerissen werden.
+- **Mehr Infos bei der Gebäude-Auswahl**: Im HUD stehen jetzt auch Produktion und Verbrauch (nicht nur Baukosten).
+- **Baumenü mit `TAB`** (neues Modul `menu.py`): zeigt alle Gebäudetypen mit Baukosten, Taste und Freischaltung.
+- **Tooltip** beim Hovern über ein Ressourcen-Icon: zeigt welche Gebäude die Ressource produzieren/verbrauchen.
+- **Meldungssystem** im HUD (`hud.meldung_anzeigen()`): rote Meldung, wenn zu wenig Rohstoffe zum Bauen da sind.
+- **Stufenweise Freischaltung**: jedes Gebäude hat ein Feld `freischaltung` (z.B. Marktplatz ab 5 Bevölkerung, Wohnhaus ab 20 Holz). `ist_freigeschaltet()` prüft das. (Ein volles Forschungssystem kommt später als `forschung.py`.)

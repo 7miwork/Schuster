@@ -1,0 +1,337 @@
+"""
+=============================================================================
+MODUL: gebaeude.py  —  Weltraum-Koloniespiel  (Stunde 3 + 6 + 7)
+=============================================================================
+
+Was ist ein Modul?
+    Ein Modul ist eine eigene Python-Datei die wir in main.py importieren.
+    So können wir den Code übersichtlich aufteilen — jedes Modul hat
+    eine klare Aufgabe. In Final Earth 2 gibt es auch viele solche Module!
+
+Aufgabe dieses Moduls:
+    Alles was mit Gebäuden zu tun hat:
+    - Gebäude-Typen definieren (Basis, Reaktor, Farm, Holzfäller, Steinmetz, Marktplatz, Wohnhaus)
+    - Gebäude platzieren (Mausklick → Kachel)
+    - Gebäude zeichnen (auf der Karte)
+
+Konzepte in dieser Datei:
+    ✓ Dictionary — eine Sammlung von Schlüssel-Wert-Paaren
+    ✓ Liste von Dictionaries — mehrere Gebäude speichern
+    ✓ Funktionen mit Parametern
+    ✓ Modul-Variablen (Zustand des Moduls)
+
+Stunde 3 — Was der Spieler gelernt hat:
+    ✓ Mausklick erkennen (pygame.MOUSEBUTTONDOWN)
+    ✓ Bildschirm-Position → Kachel-Position umrechnen
+    ✓ Gebäude als Dictionary speichern
+    ✓ Duplikate vermeiden (nicht 2 Gebäude auf derselben Kachel)
+
+Stunde 6 — NEU dazu:
+    ✓ Zwei neue Gebäude-Typen: Holzfäller (braun) und Steinmetz (grau)
+    ✓ GEBAEUDE_TYPEN hat jetzt 5 statt 3 Einträge
+    ✓ Die Zeichen-Funktion funktioniert automatisch für alle Typen
+
+Stunde 7 — NEU dazu:
+    ✓ Neues Gebäude: Wohnhaus (violett) für Bevölkerung
+    ✓ GEBAEUDE_TYPEN hat jetzt 7 Einträge (0-6)
+    ✓ Die Zeichen-Funktion funktioniert weiterhin automatisch!
+
+Stunde 9 — NEU dazu:
+    ✓ Gebäude abreißen können (Kostenrückerstattung)
+    ✓ Neue Funktion gebaeude_abreissen(): entfernt ein Gebäude von einer
+      Kachel und liefert den typ_index für die Rückerstattung zurück
+    ✓ Sicherheitsprüfung: Die Basis (Index 0) darf NICHT abgerissen werden!
+=============================================================================
+"""
+
+import pygame
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# BLOCK: GEBÄUDE-TYPEN
+# ═════════════════════════════════════════════════════════════════════════════
+# Jeder Gebäude-Typ hat einen Namen, eine Farbe und ein Kürzel.
+# In Final Earth 2 gibt es viele verschiedene Gebäudetypen.
+#
+# Ein Dictionary speichert Daten mit Schlüsseln:
+#   { "schluessel": wert, "schluessel2": wert2 }
+#
+# GEBAEUDE_TYPEN ist eine Liste von Dictionaries:
+#   GEBAEUDE_TYPEN[0] = Basis       (Index 0 = erstes Element)
+#   GEBAEUDE_TYPEN[1] = Reaktor
+#   GEBAEUDE_TYPEN[2] = Farm
+#   GEBAEUDE_TYPEN[3] = Holzfäller  — NEU in Stunde 6
+#   GEBAEUDE_TYPEN[4] = Steinmetz   — NEU in Stunde 6
+#   GEBAEUDE_TYPEN[5] = Marktplatz
+#   GEBAEUDE_TYPEN[6] = Wohnhaus    — NEU in Stunde 7
+#
+# Wichtig: In ressourcen.py gibt es GEBAEUDE_WIRTSCHAFT mit demselben Index!
+#   Index 3 in beiden = Holzfäller
+#   Index 4 in beiden = Steinmetz
+#   Index 6 in beiden = Wohnhaus (Stunde 7)
+# ═════════════════════════════════════════════════════════════════════════════
+
+GEBAEUDE_TYPEN = [
+    {
+        "name":    "Basis",
+        "farbe":   (100, 180, 255),   # Hellblau — das Hauptquartier
+        "kuerzel": "B",
+    },
+    {
+        "name":    "Reaktor",
+        "farbe":   (255, 200, 50),    # Gelb-Orange — Energieversorgung
+        "kuerzel": "R",
+    },
+    {
+        "name":    "Farm",
+        "farbe":   (80, 200, 100),    # Grün — Nahrungsversorgung
+        "kuerzel": "F",
+    },
+    # ── Index 3: Holzfäller (NEU in Stunde 6) ──────────────────────────────
+    {
+        "name":    "Holzfaeller",
+        "farbe":   (160, 120, 60),    # Braun — Holzverarbeitung
+        "kuerzel": "H",
+    },
+    # ── Index 4: Steinmetz (NEU in Stunde 6) ──────────────────────────────
+    {
+        "name":    "Steinmetz",
+        "farbe":   (140, 140, 150),   # Hellgrau — Steinverarbeitung
+        "kuerzel": "S",
+    },
+    # ── Index 5: Marktplatz ────────────────────────────────────────────────
+    {
+        "name":    "Marktplatz",
+        "farbe":   (220, 180, 80),    # Sandgold — Handel und Gold
+        "kuerzel": "M",
+    },
+    # ── Index 6: Wohnhaus (NEU in Stunde 7) ───────────────────────────────
+    # Das Wohnhaus produziert Bevölkerung — je mehr Wohnhäuser, desto mehr
+    # Leute ziehen in die Kolonie!
+    {
+        "name":    "Wohnhaus",
+        "farbe":   (180, 180, 200),   # Fast Violett — Wohnungen für die Leute
+        "kuerzel": "W",
+    },
+]
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# BLOCK: MODUL-VARIABLEN
+# ═════════════════════════════════════════════════════════════════════════════
+# Diese Variablen gehören zum gebaeude-Modul.
+# Sie werden einmalig durch gebaeude_initialisieren() gesetzt.
+# ═════════════════════════════════════════════════════════════════════════════
+
+_fenster        = None   # Das Pygame-Fenster (wird von main.py übergeben)
+_kachel_groesse = 48     # Größe einer Kachel in Pixeln
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# BLOCK: INITIALISIERUNG
+# ═════════════════════════════════════════════════════════════════════════════
+
+def gebaeude_initialisieren(fenster_obj, kachel_groesse):
+    """
+    Übergibt die Referenz auf das Pygame-Fenster und die Kachelgröße.
+    Muss einmalig in main.py aufgerufen werden bevor etwas gezeichnet wird.
+    
+    Parameter:
+        fenster_obj    — das Pygame-Surface (fenster aus main.py)
+        kachel_groesse — Größe einer Kachel in Pixeln (KACHEL_GROESSE aus main.py)
+    """
+    global _fenster, _kachel_groesse
+    _fenster        = fenster_obj
+    _kachel_groesse = kachel_groesse
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# BLOCK: GEBÄUDE PLATZIEREN
+# ═════════════════════════════════════════════════════════════════════════════
+
+def gebaeude_platzieren(liste_gebaeude, typ_index, kachel_x, kachel_y):
+    """
+    Platziert ein neues Gebäude auf der Karte — wenn die Kachel frei ist.
+    
+    Was ist ein Dictionary?
+        Ein Dictionary speichert zusammengehörige Daten:
+        { "typ": 0, "kachel_x": 5, "kachel_y": 3 }
+        So wie eine Karteikarte mit mehreren Feldern.
+    
+    Duplikate vermeiden:
+        Bevor wir ein Gebäude platzieren prüfen wir ob auf dieser Kachel
+        bereits ein Gebäude steht. Wenn ja → nichts tun.
+    
+    Parameter:
+        liste_gebaeude — die Gebäude-Liste aus main.py (wird verändert!)
+        typ_index      — welcher Gebäude-Typ (0=Basis, 1=Reaktor, ..., 6=Wohnhaus)
+        kachel_x       — x-Position auf der Karte (in Kacheln)
+        kachel_y       — y-Position auf der Karte (in Kacheln)
+    """
+    # ── Schritt 1: Prüfen ob die Kachel schon belegt ist ─────────────────
+    for gebaeude in liste_gebaeude:
+        if gebaeude["kachel_x"] == kachel_x and gebaeude["kachel_y"] == kachel_y:
+            print(f"Kachel ({kachel_x}, {kachel_y}) ist bereits belegt!")
+            return
+    
+    # ── Schritt 2: Neues Gebäude als Dictionary erstellen ─────────────────
+    # Ein Dictionary mit allen wichtigen Informationen des Gebäudes
+    neues_gebaeude = {
+        "typ":      typ_index,   # Index in GEBAEUDE_TYPEN
+        "kachel_x": kachel_x,   # Position auf der Karte (Spalte)
+        "kachel_y": kachel_y,   # Position auf der Karte (Zeile)
+    }
+    
+    # ── Schritt 3: Zur Liste hinzufügen ───────────────────────────────────
+    liste_gebaeude.append(neues_gebaeude)
+    
+    name = GEBAEUDE_TYPEN[typ_index]["name"]
+    print(f"{name} auf Kachel ({kachel_x}, {kachel_y}) platziert!")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# BLOCK: GEBÄUDE ABREISSEN  —  NEU in Stunde 9
+# ═════════════════════════════════════════════════════════════════════════════
+# Die Schüler wollten: Man soll Gebäude auch wieder entfernen können
+# (Verbesserungsvorschlag 1). In Final Earth 2 kann man Gebäude abreißen,
+# wenn man Platz braucht oder etwas falsch geplant hat.
+#
+# Beim Abriss bekommt der Spieler 50 % der Baukosten zurück (das macht die
+# neue Funktion ressourcen_zurueckerstatten() in ressourcen.py).
+#
+# Die Basis (Index 0) ist das Herz der Kolonie — sie darf NICHT abgerissen
+# werden! Sonst wäre da plötzlich kein Startpunkt mehr da.
+# ═════════════════════════════════════════════════════════════════════════════
+
+def gebaeude_abreissen(liste_gebaeude, kachel_x, kachel_y):
+    """
+    Reißt das Gebäude auf der angegebenen Kachel ab.
+
+    Die Funktion sucht in liste_gebaeude nach einem Gebäude, dessen
+    Position (kachel_x, kachel_y) zur angeklickten Kachel passt.
+
+    - Wenn dort ein Gebäude steht (und es nicht die Basis ist),
+      wird es aus der Liste entfernt und sein typ_index zurückgegeben.
+    - Die Basis (Index 0) kann NICHT abgerissen werden (Sicherheit).
+    - Wenn dort nichts steht, wird None zurückgegeben.
+
+    Rückgabewert:
+        typ_index — der Gebäude-Typ (für die Kosten-Rückerstattung)
+        None      — wenn dort kein abreißbares Gebäude steht
+
+    Wichtig für main.py:
+        Dieser typ_index wird an ressourcen.ressourcen_zurueckerstatten()
+        übergeben, damit der Spieler 50 % der Baukosten zurückbekommt.
+    """
+    # Gehe jedes Gebäude auf der Karte durch
+    for gebaeude in liste_gebaeude:
+        # Passt die Position des Gebäudes zur angeklickten Kachel?
+        if (gebaeude["kachel_x"] == kachel_x and
+                gebaeude["kachel_y"] == kachel_y):
+
+            # ── Sicherheitsprüfung: Die Basis darf nicht abgerissen werden ──
+            # Index 0 = Basis. Ohne die Basis gibt es keine Kolonie mehr!
+            if gebaeude["typ"] == 0:
+                print("Die Basis kann nicht abgerissen werden!")
+                return None
+
+            # Gebäude-Typ merken (für die Kosten-Rückerstattung)
+            typ_index = gebaeude["typ"]
+
+            # Gebäude aus der Liste entfernen (remove() löscht das Element)
+            liste_gebaeude.remove(gebaeude)
+
+            # Den Typ zurückgeben — main.py braucht ihn für die Rückerstattung
+            return typ_index
+
+    # Kein Gebäude auf dieser Kachel gefunden
+    print(f"Auf Kachel ({kachel_x}, {kachel_y}) steht kein Gebäude.")
+    return None
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# BLOCK: GEBÄUDE ZEICHNEN
+# ═════════════════════════════════════════════════════════════════════════════
+
+def gebaeude_zeichnen(liste_gebaeude, kamera_x, kamera_y):
+    """
+    Zeichnet alle platzierten Gebäude auf der Karte.
+    
+    Wie bei der Karte:
+        pixel_x = kachel_x * kachel_groesse - kamera_x
+        pixel_y = kachel_y * kachel_groesse - kamera_y
+    
+    Jedes Gebäude wird als farbiges Rechteck mit einem Kürzel gezeichnet.
+    
+    Neu in Stunde 6: Die Funktion funktioniert automatisch auch für
+    die neuen Gebäude-Typen Holzfäller und Steinmetz — denn sie holt
+    sich die Farbe und das Kürzel einfach aus GEBAEUDE_TYPEN[typ_index].
+    Man muss die Zeichen-Funktion nicht ändern, nur die Daten!
+    
+    Neu in Stunde 7: Das gilt auch fürs Wohnhaus — kein Code nötig!
+    
+    Parameter:
+        liste_gebaeude — Liste aller platzierten Gebäude
+        kamera_x       — aktuelle Kamera-x-Position (aus main.py)
+        kamera_y       — aktuelle Kamera-y-Position (aus main.py)
+    """
+    if _fenster is None:
+        return   # Noch nicht initialisiert
+    
+    schrift = pygame.font.Font(None, 28)
+    
+    for gebaeude in liste_gebaeude:
+        
+        # ── Bildschirm-Position berechnen (wie in karte_zeichnen) ─────────
+        pixel_x = gebaeude["kachel_x"] * _kachel_groesse - kamera_x
+        pixel_y = gebaeude["kachel_y"] * _kachel_groesse - kamera_y
+        
+        # ── Unsichtbare Gebäude überspringen ──────────────────────────────
+        if pixel_x + _kachel_groesse < 0:   continue
+        if pixel_y + _kachel_groesse < 0:   continue
+        if pixel_x > _fenster.get_width():  continue
+        if pixel_y > _fenster.get_height(): continue
+        
+        # ── Gebäude-Typ-Daten holen ───────────────────────────────────────
+        typ_daten = GEBAEUDE_TYPEN[gebaeude["typ"]]
+        farbe     = typ_daten["farbe"]
+        kuerzel   = typ_daten["kuerzel"]
+        
+        # ── Gebäude-Rechteck zeichnen ─────────────────────────────────────
+        # Etwas kleiner als die Kachel → man sieht den Boden darunter
+        abstand      = 4
+        gebaeude_rect = pygame.Rect(
+            pixel_x + abstand,
+            pixel_y + abstand,
+            _kachel_groesse - 2 * abstand,
+            _kachel_groesse - 2 * abstand,
+        )
+        pygame.draw.rect(_fenster, farbe, gebaeude_rect)
+        pygame.draw.rect(_fenster, (255, 255, 255), gebaeude_rect, 2)   # weißer Rahmen
+        
+        # ── Kürzel in der Mitte des Gebäudes ──────────────────────────────
+        text_surface = schrift.render(kuerzel, True, (20, 20, 20))
+        text_rect    = text_surface.get_rect(center=gebaeude_rect.center)
+        _fenster.blit(text_surface, text_rect)
+
+# =============================================================================
+# ENDE STUNDE 9
+# =============================================================================
+# Wiederholung: Was wir in Stunde 9 in diesem Modul NEU gelernt haben
+#
+# Stunde 9 (NEU):
+#   ✓ GEBAEUDE_TYPEN hat weiterhin 7 Einträge (0-6) — unverändert!
+#   ✓ Neue Funktion gebaeude_abreissen(liste_gebaeude, kachel_x, kachel_y)
+#     → entfernt das Gebäude auf einer Kachel und gibt den typ_index zurück
+#   ✓ Rückgabewert None, wenn dort kein abreißbares Gebäude steht
+#   ✓ Die Basis (Index 0) kann NICHT abgerissen werden (Sicherheitsprüfung)
+#
+# HÄUFIGE FEHLER zum Merken (Stunde 9):
+#   ✗ Rückerstattung ohne vorherige Abriss-Prüfung
+#     → Erst gebaeude_abreissen() aufrufen und prüfen ob typ_index None ist,
+#       DANN zurückerstatten. Sonst gibt es Gold geschenkt!
+#   ✗ remove() während man über die Liste iteriert
+#     → In gebaeude_abreissen nutzen wir remove() NACH return innerhalb der
+#       for-Schleife — das ist hier ok, weil wir sofort zurückkehren.
+#   ✗ Basis-Sicherheitsprüfung vergessen → Kolonie kann zerstört werden!
+# =============================================================================
