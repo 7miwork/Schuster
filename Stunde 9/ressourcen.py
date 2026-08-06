@@ -53,8 +53,21 @@ Stunde 9 — NEU dazu:
       vorhanden ist (z.B. Marktplatz ab 5 Bevölkerung)
     ✓ Neue Funktion ist_freigeschaltet(ressourcen_dict, typ_index)
     ✓ kann_bauen() prüft jetzt zuerst die Freischaltung
+
+Stunde 10 — NEU dazu:
+    ✓ Neues Gebäude: Labor (Index 7) — produziert die neue Ressource "forschung"
+    ✓ Neuer Rohstoff: Forschungspunkte ("forschung")
+    ✓ "freischaltung" kann jetzt ZWEI Arten von Bedingungen haben:
+        {"typ": "ressource", ...}  → genug von einer Ressource (wie bisher)
+        {"typ": "forschung", ...}  → eine Technologie muss erforscht sein
+      Und sogar EINE LISTE mehrerer Bedingungen (alle müssen erfüllt sein)!
+    ✓ ist_freigeschaltet() verarbeitet beide Formen automatisch
+    ✓ import forschung (für die Technologie-Prüfung) — KEIN Import-Zirkel
 =============================================================================
 """
+
+import forschung   # Für die Technologie-Prüfung bei der Freischaltung (Stunde 10)
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # BLOCK: WIRTSCHAFTSDATEN
@@ -68,6 +81,7 @@ Stunde 9 — NEU dazu:
 #   Index 4 = Steinmetz   (GEBAEUDE_TYPEN[4]) — NEU in Stunde 6
 #   Index 5 = Marktplatz  (GEBAEUDE_TYPEN[5])
 #   Index 6 = Wohnhaus    (GEBAEUDE_TYPEN[6]) — NEU in Stunde 7
+#   Index 7 = Labor       (GEBAEUDE_TYPEN[7]) — NEU in Stunde 10
 #
 # Das ist wichtig: Wenn wir später neue Gebäude hinzufügen, müssen
 # beide Listen erweitert werden — und die Indizes müssen zusammenpassen!
@@ -81,10 +95,16 @@ Stunde 9 — NEU dazu:
 #                      z.B. {"holz": 2} bedeutet: −2 Holz/Sekunde
 #   "max_anzahl"     — Wie oft kann man dieses Gebäude bauen?
 #                      1 = nur einmal (Basis), None = unbegrenzt
-#   "freischaltung"  — NEU in Stunde 9: Ab wann kann man dieses Gebäude bauen?
-#                      z.B. {"ressource": "bevoelkerung", "menge": 5} bedeutet:
-#                      Erst ab 5 Bevölkerung freigeschaltet.
+#   "freischaltung"  — NEU in Stunde 9, erweitert in Stunde 10: Ab wann kann
+#                      man dieses Gebäude bauen?
 #                      None = von Anfang an verfügbar.
+#                      In Stunde 10 gibt es ZWEI Arten von Bedingungen:
+#                        {"typ": "ressource", "ressource": X, "menge": N}
+#                          → erst ab N von Ressource X (wie bisher)
+#                        {"typ": "forschung", "technologie": "wohnbau"}
+#                          → erst wenn die Technologie erforscht ist
+#                      Außerdem kann es eine LISTE sein — dann müssen ALLE
+#                      Bedingungen erfüllt sein (UND-Verknüpfung):
 # ═════════════════════════════════════════════════════════════════════════════
 
 GEBAEUDE_WIRTSCHAFT = [
@@ -149,8 +169,10 @@ GEBAEUDE_WIRTSCHAFT = [
         "produktion": {"gold": 12},
         "verbrauch":  {"stein": 5, "arbeiter": 2},
         "max_anzahl": None,
-        # NEU St. 9: Marktplatz erst ab 5 Bevölkerung freischalten!
-        "freischaltung": {"ressource": "bevoelkerung", "menge": 5},
+        # NEU St. 9 + 10: Marktplatz erst ab 5 Bevölkerung freischalten.
+        # Das bleibt eine RESSOURCEN-Bedingung (typ "ressource") — damit man
+        # sieht, dass es BEIDE Arten nebeneinander gibt.
+        "freischaltung": {"typ": "ressource", "ressource": "bevoelkerung", "menge": 5},
     },
     # ── Index 6: Wohnhaus (Bevölkerungsproduktion) — Limit: 10 ─────────────
     # Kostet 20 Gold + 15 Holz + 10 Stein, produziert +1 Bevölkerung,
@@ -162,8 +184,29 @@ GEBAEUDE_WIRTSCHAFT = [
         "produktion": {"bevoelkerung": 1},                     # Produziert Bevölkerung
         "verbrauch":  {"energie": 3, "nahrung": 2},           # Verbraucht Energie + Nahrung
         "max_anzahl": 10,                                      # Maximum 10 Wohnhäuser
-        # NEU St. 9: Wohnhaus erst ab 20 Holz (aktueller Wert) freischalten!
-        "freischaltung": {"ressource": "holz", "menge": 20},
+        # Stunde 10: Das Wohnhaus ist per FORSCHUNG gesperrt! Erst wenn die
+        # Technologie "wohnbau" erforscht ist (im Forschungsmenü, Taste F),
+        # kann man es bauen — egal wie viel Holz man hat.
+        "freischaltung": {"typ": "forschung", "technologie": "wohnbau"},
+    },
+    # ── Index 7: Labor (Forschung) — NEU in Stunde 10 ──────────────────────
+    # Das Labor produziert die neue Ressource "forschung" (Forschungspunkte).
+    # Damit erforscht man im Forschungsmenü (Taste F) neue Technologien.
+    # Mit Startrohstoffen SOLL der Spieler zuerst die Basis-Wirtschaft
+    # (Reaktor, Farm, Holzfäller, Steinmetz) aufbauen — deshalb ist das Labor
+    # erst ab 8 Bevölkerung UND 50 Gold verfügbar (beide Bedingungen = UND).
+    {
+        "baukosten":  {"gold": 40, "energie": 20},             # Baukosten
+        "produktion": {"forschung": 5},                        # Produziert Forschungspunkte
+        "verbrauch":  {"gold": 2, "energie": 3},               # Verbraucht Gold + Energie
+        "max_anzahl": None,                                    # Beliebig oft baubar
+        # Eine LISTE von Bedingungen: ALLE müssen erfüllt sein (UND)!
+        #   a) mindestens 8 Bevölkerung
+        #   b) mindestens 50 Gold
+        "freischaltung": [
+            {"typ": "ressource", "ressource": "bevoelkerung", "menge": 8},
+            {"typ": "ressource", "ressource": "gold", "menge": 50},
+        ],
     },
 ]
 
@@ -222,13 +265,21 @@ def ist_freigeschaltet(ressourcen_dict, typ_index):
     """
     Prüft ob ein Gebäude-Typ schon freigeschaltet ist.
 
-    Liest das Feld "freischaltung" aus GEBAEUDE_WIRTSCHAFT:
-    - None  → sofort verfügbar (True)
-    - sonst → True, wenn der aktuelle Ressourcenwert groß genug ist
+    Liest das Feld "freischaltung" aus GEBAEUDE_WIRTSCHAFT.
+    Es gibt DREI mögliche Formen:
+      None                                    → sofort verfügbar (True)
+      {"typ": "ressource", "ressource": X, "menge": N}
+                                               → erst ab N von Ressource X
+      {"typ": "forschung", "technologie": "id"}
+                                               → erst wenn Technologie erforscht
+      [ {...}, {...}, ... ] (Liste)            → ALLE Bedingungen müssen erfüllt
+                                                sein (UND-Verknüpfung)
+
+    Stunde 10 erweitert das System um den Typ "forschung" und um Listen.
 
     Parameter:
         ressourcen_dict  — das Ressourcen-Dictionary (z.B. {"gold": 100, ...})
-        typ_index        — welcher Gebäude-Typ? (0=Basis, ..., 6=Wohnhaus)
+        typ_index        — welcher Gebäude-Typ? (0=Basis, ..., 7=Labor)
 
     Rückgabe:
         True  — das Gebäude darf gebaut werden
@@ -243,10 +294,90 @@ def ist_freigeschaltet(ressourcen_dict, typ_index):
     if freischaltung is None:
         return True
 
-    # Sonst: Ist genug von der geforderten Ressource vorhanden?
-    ress_name = freischaltung["ressource"]
-    menge     = freischaltung["menge"]
-    return _hat_genug(ressourcen_dict, ress_name, menge)
+    # ── Hilfsfunktion: Eine EINZELNE Bedingung prüfen ─────────────────────
+    # Gibt True zurück, wenn diese eine Bedingung erfüllt ist.
+    def _einzel_pruefen(einzel_bedingung):
+        bed_typ = einzel_bedingung.get("typ", "ressource")
+
+        if bed_typ == "forschung":
+            # Technologie muss erforscht sein.
+            tech_id = einzel_bedingung["technologie"]
+            return forschung.ist_technologie_erforscht(tech_id)
+        else:
+            # Standard: Ressourcen-Menge prüfen (wie in Stunde 9)
+            ress_name = einzel_bedingung["ressource"]
+            menge     = einzel_bedingung["menge"]
+            return _hat_genug(ressourcen_dict, ress_name, menge)
+
+    # ── Jetzt die eigentliche Prüfung ─────────────────────────────────────
+    if isinstance(freischaltung, list):
+        # Liste von Bedingungen: ALLE müssen erfüllt sein (UND).
+        # Beispiel Labor: [bevoelkerung>=8, gold>=50]
+        for einzel in freischaltung:
+            if not _einzel_pruefen(einzel):
+                return False
+        return True
+    else:
+        # Einzelnes Dictionary (wie in Stunde 9)
+        return _einzel_pruefen(freischaltung)
+
+
+def freischaltung_hinweis(ressourcen_dict, typ_index):
+    """
+    Gibt einen lesbaren Hinweis zurück, warum ein Gebäude NOCH NICHT
+    freigeschaltet ist.
+
+    Wird von menu.py (Baumenü) verwendet, um den Sperr-Hinweis korrekt
+    anzuzeigen — z.B. "Benötigt Technologie: Wohnbau" statt nur einer
+    Rohstoffmenge, wenn die Freischaltung vom Typ "forschung" ist.
+
+    Parameter:
+        ressourcen_dict  — das Ressourcen-Dictionary
+        typ_index        — welcher Gebäude-Typ?
+
+    Rückgabe:
+        Ein deutscher Hinweis-String, z.B.:
+          "braucht 5 Bevoelkerung"
+          "Benötigt Technologie: Wohnbau"
+          "braucht 8 Bevoelkerung, 50 Gold"
+        oder "" (wenn keine Freischaltung oder schon frei).
+    """
+    wirtschaft = GEBAEUDE_WIRTSCHAFT[typ_index]
+    freischaltung = wirtschaft.get("freischaltung")
+
+    if freischaltung is None:
+        return ""
+
+    # Hilfsfunktion: Eine einzelne Bedingung in Text umwandeln
+    def _einzel_text(einzel):
+        bed_typ = einzel.get("typ", "ressource")
+        if bed_typ == "forschung":
+            tech_id = einzel["technologie"]
+            return f"Benötigt Technologie: {forschung.technologie_name(tech_id)}"
+        else:
+            ress_name = einzel["ressource"]
+            menge     = einzel["menge"]
+            # Schönen deutschen Namen holen (wie im HUD)
+            return f"braucht {menge} {_ressourcen_name_fuer_hud(ress_name)}"
+
+    if isinstance(freischaltung, list):
+        teile = [_einzel_text(e) for e in freischaltung]
+        return ", ".join(teile)
+    else:
+        return _einzel_text(freischaltung)
+
+
+def _ressourcen_name_fuer_hud(ress_name):
+    """
+    Kleine Hilfsfunktion für die Anzeige: macht aus einem Schlüssel wie
+    "bevoelkerung" einen schönen Namen "Bevoelkerung".
+    """
+    namen = {
+        "gold": "Gold", "energie": "Energie", "holz": "Holz",
+        "stein": "Stein", "bevoelkerung": "Bevoelkerung",
+        "nahrung": "Nahrung", "forschung": "Forschungspunkte",
+    }
+    return namen.get(ress_name, ress_name)
 
 
 # ═════════════════════════════════════════════════════════════════════════════

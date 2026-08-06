@@ -41,6 +41,12 @@ Stunde 9 — NEU dazu:
     ✓ Neue Funktion gebaeude_abreissen(): entfernt ein Gebäude von einer
       Kachel und liefert den typ_index für die Rückerstattung zurück
     ✓ Sicherheitsprüfung: Die Basis (Index 0) darf NICHT abgerissen werden!
+
+Stunde 10 — NEU dazu:
+    ✓ Neues Gebäude: Labor (Index 7, Kürzel L, Taste 8)
+    ✓ Das Labor produziert Forschungspunkte (Ressource "forschung")
+    ✓ GEBAEUDE_TYPEN hat jetzt 8 Einträge (0-7)
+    ✓ Die Zeichen-Funktion funktioniert weiterhin automatisch!
 =============================================================================
 """
 
@@ -64,11 +70,13 @@ import pygame
 #   GEBAEUDE_TYPEN[4] = Steinmetz   — NEU in Stunde 6
 #   GEBAEUDE_TYPEN[5] = Marktplatz
 #   GEBAEUDE_TYPEN[6] = Wohnhaus    — NEU in Stunde 7
+#   GEBAEUDE_TYPEN[7] = Labor       — NEU in Stunde 10
 #
 # Wichtig: In ressourcen.py gibt es GEBAEUDE_WIRTSCHAFT mit demselben Index!
 #   Index 3 in beiden = Holzfäller
 #   Index 4 in beiden = Steinmetz
 #   Index 6 in beiden = Wohnhaus (Stunde 7)
+#   Index 7 in beiden = Labor (Stunde 10)
 # ═════════════════════════════════════════════════════════════════════════════
 
 GEBAEUDE_TYPEN = [
@@ -112,6 +120,14 @@ GEBAEUDE_TYPEN = [
         "name":    "Wohnhaus",
         "farbe":   (180, 180, 200),   # Fast Violett — Wohnungen für die Leute
         "kuerzel": "W",
+    },
+    # ── Index 7: Labor (NEU in Stunde 10) ─────────────────────────────────
+    # Das Labor produziert Forschungspunkte (Ressource "forschung").
+    # Damit kann man im Forschungsmenü (Taste F) neue Technologien erforschen!
+    {
+        "name":    "Labor",
+        "farbe":   (150, 200, 255),   # Hellblau-Cyan — Wissenschaft
+        "kuerzel": "L",
     },
 ]
 
@@ -315,23 +331,27 @@ def gebaeude_zeichnen(liste_gebaeude, kamera_x, kamera_y):
         _fenster.blit(text_surface, text_rect)
 
 # =============================================================================
-# ENDE STUNDE 9
+# ENDE STUNDE 10
 # =============================================================================
-# Wiederholung: Was wir in Stunde 9 in diesem Modul NEU gelernt haben
+# Wiederholung: Was wir in Stunde 10 in diesem Modul NEU gelernt haben
 #
-# Stunde 9 (NEU):
-#   ✓ GEBAEUDE_TYPEN hat weiterhin 7 Einträge (0-6) — unverändert!
-#   ✓ Neue Funktion gebaeude_abreissen(liste_gebaeude, kachel_x, kachel_y)
+# Stunde 9 (Wiederholung):
+#   ✓ GEBAEUDE_TYPEN hat 7 Einträge (0-6)
+#   ✓ Funktion gebaeude_abreissen(liste_gebaeude, kachel_x, kachel_y)
 #     → entfernt das Gebäude auf einer Kachel und gibt den typ_index zurück
 #   ✓ Rückgabewert None, wenn dort kein abreißbares Gebäude steht
 #   ✓ Die Basis (Index 0) kann NICHT abgerissen werden (Sicherheitsprüfung)
 #
-# HÄUFIGE FEHLER zum Merken (Stunde 9):
-#   ✗ Rückerstattung ohne vorherige Abriss-Prüfung
-#     → Erst gebaeude_abreissen() aufrufen und prüfen ob typ_index None ist,
-#       DANN zurückerstatten. Sonst gibt es Gold geschenkt!
-#   ✗ remove() während man über die Liste iteriert
-#     → In gebaeude_abreissen nutzen wir remove() NACH return innerhalb der
-#       for-Schleife — das ist hier ok, weil wir sofort zurückkehren.
+# Stunde 10 (NEU):
+#   ✓ GEBAEUDE_TYPEN hat jetzt 8 Einträge (0-7)
+#   ✓ Neues Gebäude: Labor (Index 7, Kürzel L, Taste 8)
+#   ✓ Das Labor produziert Forschungspunkte
+#   ✓ gebaeude_zeichnen() funktioniert weiterhin automatisch —
+#     Farbe und Kürzel kommen einfach aus GEBAEUDE_TYPEN!
+#
+# HÄUFIGE FEHLER zum Merken (Stunde 9 + 10):
+#   ✗ Rückerstattung ohne vorherige Abriss-Prüfung → Gold geschenkt!
 #   ✗ Basis-Sicherheitsprüfung vergessen → Kolonie kann zerstört werden!
+#   ✗ Neues Gebäude nur in GEBAEUDE_TYPEN, aber nicht in
+#     GEBAEUDE_WIRTSCHAFT eingefügt → die Indizes passen nicht mehr!
 # =============================================================================
