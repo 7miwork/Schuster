@@ -213,6 +213,15 @@ def _ressourcen_leiste_zeichnen(ressourcen, maus_pos=None, gebaeude_wirtschaft=N
             "text_pos": (635, 12),
             "schluessel": "nahrung",
         },
+        # ── Index 6: Forschung — NEU in Stunde 10 ─────────────────────────────
+        # Das Labor produziert Forschungspunkte für neue Technologien.
+        {
+            "name":     "Forschung",
+            "farbe":    (120, 220, 255),     # Hellblau — Wissenschaft
+            "icon_pos": (740, 15),
+            "text_pos": (755, 12),
+            "schluessel": "forschung",
+        },
     ]
     
     # ── Hintergrund für die Leiste zeichnen ──────────────────────────────
@@ -268,7 +277,7 @@ def _ressourcen_tooltip_zeichnen(res, icon_x, icon_y, gebaeude_wirtschaft):
     """
     # Gebäude-Namen parallel zu den Indizes in GEBAEUDE_WIRTSCHAFT
     gebaeude_namen = ["Basis", "Reaktor", "Farm", "Holzfaeller",
-                      "Steinmetz", "Marktplatz", "Wohnhaus"]
+                      "Steinmetz", "Marktplatz", "Wohnhaus", "Labor"]
 
     # Sammle Gebäude, die diese Ressource PRODUZIEREN (+) bzw VERBRAUCHEN (−)
     produzenten = []
@@ -513,7 +522,7 @@ def _ressourcen_name(ress_name):
         "stein":         "Stein",
         "bevoelkerung":  "Bevoelkerung",
         "nahrung":       "Nahrung",
-        "arbeiter":      "Arbeiter",
+        "forschung":     "Forschungspunkte",
     }
     # get() mit Standardwert: falls ein neuer Schlüssel dazukommt
     return namen.get(ress_name, ress_name)

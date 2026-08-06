@@ -119,55 +119,55 @@ GEBAEUDE_WIRTSCHAFT = [
         "freischaltung": None,                 # NEU St. 9: sofort verfügbar
     },
     # ── Index 1: Reaktor (Energieproduktion) ──────────────────────────────
-    # Kostet 20 Gold, produziert +5 Energie, verbraucht −2 Holz + 1 Arbeiter.
+    # Kostet 20 Gold, produziert +5 Energie, verbraucht −2 Holz.
     # Kann beliebig oft gebaut werden (max_anzahl = None).
     {
         "baukosten":  {"gold": 20},            # Baukosten
         "produktion": {"energie": 5},          # Produziert Energie
-        "verbrauch":  {"holz": 2, "arbeiter": 1},  # Verbraucht Holz + Arbeiter
+        "verbrauch":  {"holz": 2},  # Verbraucht Holz
         "max_anzahl": None,                    # Beliebig oft baubar
         "freischaltung": None,                 # NEU St. 9: sofort verfügbar
     },
     # ── Index 2: Farm (Nahrungsproduktion) ─────────────────────────────────
     # Kostet 15 Gold + 10 Energie, produziert +5 Nahrung,
-    # verbraucht −2 Energie + 1 Arbeiter.
+    # verbraucht −2 Energie.
     # Kann beliebig oft gebaut werden (max_anzahl = None).
     {
         "baukosten":  {"gold": 15, "energie": 10},   # Baukosten
         "produktion": {"nahrung": 5},                 # Produziert Nahrung
-        "verbrauch":  {"energie": 2, "arbeiter": 1}, # Verbraucht Energie + Arbeiter
+        "verbrauch":  {"energie": 2}, # Verbraucht Energie
         "max_anzahl": None,                           # Beliebig oft baubar
         "freischaltung": None,                        # NEU St. 9: sofort verfügbar
     },
     # ── Index 3: Holzfäller (Holzproduktion) — NEU in Stunde 6 ────────────
     # Kostet 10 Gold + 5 Energie, produziert +6 Holz,
-    # verbraucht −2 Energie + 1 Arbeiter.
+    # verbraucht −2 Energie.
     # Der Holzfäller liefert Holz — das brauchen wir für Reaktoren!
     {
         "baukosten":  {"gold": 10, "energie": 5},    # Baukosten
         "produktion": {"holz": 6},                    # Produziert Holz
-        "verbrauch":  {"energie": 2, "arbeiter": 1}, # Verbraucht Energie + Arbeiter
+        "verbrauch":  {"energie": 2}, # Verbraucht Energie
         "max_anzahl": None,                           # Beliebig oft baubar
         "freischaltung": None,                        # NEU St. 9: sofort verfügbar
     },
     # ── Index 4: Steinmetz (Steinproduktion) — NEU in Stunde 6 ────────────
     # Kostet 15 Gold + 10 Energie, produziert +5 Stein,
-    # verbraucht −3 Energie + 1 Arbeiter.
+    # verbraucht −3 Energie.
     # Stein ist ein neuer Rohstoff — wird für spätere Gebäude wichtig!
     {
         "baukosten":  {"gold": 15, "energie": 10},   # Baukosten
         "produktion": {"stein": 5},                   # Produziert Stein
-        "verbrauch":  {"energie": 3, "arbeiter": 1}, # Verbraucht Energie + Arbeiter
+        "verbrauch":  {"energie": 3}, # Verbraucht Energie
         "max_anzahl": None,                           # Beliebig oft baubar
         "freischaltung": None,                        # NEU St. 9: sofort verfügbar
     },
     # ── Index 5: Marktplatz (Steinverarbeitung) ────────────────────────────
     # Kostet 30 Gold + 15 Energie, produziert +12 Gold,
-    # verbraucht −5 Stein + 2 Arbeiter.
+    # verbraucht −5 Stein.
     {
         "baukosten":  {"gold": 30, "energie": 15},
         "produktion": {"gold": 12},
-        "verbrauch":  {"stein": 5, "arbeiter": 2},
+        "verbrauch":  {"stein": 5},
         "max_anzahl": None,
         # NEU St. 9 + 10: Marktplatz erst ab 5 Bevölkerung freischalten.
         # Das bleibt eine RESSOURCEN-Bedingung (typ "ressource") — damit man
@@ -184,28 +184,27 @@ GEBAEUDE_WIRTSCHAFT = [
         "produktion": {"bevoelkerung": 1},                     # Produziert Bevölkerung
         "verbrauch":  {"energie": 3, "nahrung": 2},           # Verbraucht Energie + Nahrung
         "max_anzahl": 10,                                      # Maximum 10 Wohnhäuser
-        # Stunde 10: Das Wohnhaus ist per FORSCHUNG gesperrt! Erst wenn die
-        # Technologie "wohnbau" erforscht ist (im Forschungsmenü, Taste F),
-        # kann man es bauen — egal wie viel Holz man hat.
-        "freischaltung": {"typ": "forschung", "technologie": "wohnbau"},
+        # Stunde 10: Das Wohnhaus ist erst ab 5 Bevölkerung verfügbar.
+        # So wächst die Kolonie Schritt für Schritt — wie in Final Earth 2!
+        "freischaltung": {"typ": "ressource", "ressource": "bevoelkerung", "menge": 5},
     },
     # ── Index 7: Labor (Forschung) — NEU in Stunde 10 ──────────────────────
     # Das Labor produziert die neue Ressource "forschung" (Forschungspunkte).
     # Damit erforscht man im Forschungsmenü (Taste F) neue Technologien.
     # Mit Startrohstoffen SOLL der Spieler zuerst die Basis-Wirtschaft
     # (Reaktor, Farm, Holzfäller, Steinmetz) aufbauen — deshalb ist das Labor
-    # erst ab 8 Bevölkerung UND 50 Gold verfügbar (beide Bedingungen = UND).
+    # erst ab 5 Bevölkerung UND 40 Gold verfügbar (beide Bedingungen = UND).
     {
         "baukosten":  {"gold": 40, "energie": 20},             # Baukosten
         "produktion": {"forschung": 5},                        # Produziert Forschungspunkte
         "verbrauch":  {"gold": 2, "energie": 3},               # Verbraucht Gold + Energie
         "max_anzahl": None,                                    # Beliebig oft baubar
         # Eine LISTE von Bedingungen: ALLE müssen erfüllt sein (UND)!
-        #   a) mindestens 8 Bevölkerung
-        #   b) mindestens 50 Gold
+        #   a) mindestens 5 Bevölkerung
+        #   b) mindestens 40 Gold
         "freischaltung": [
-            {"typ": "ressource", "ressource": "bevoelkerung", "menge": 8},
-            {"typ": "ressource", "ressource": "gold", "menge": 50},
+            {"typ": "ressource", "ressource": "bevoelkerung", "menge": 5},
+            {"typ": "ressource", "ressource": "gold", "menge": 40},
         ],
     },
 ]
@@ -243,6 +242,13 @@ def _hat_genug(ressourcen_dict, ressourcen_name, benoetigte_menge):
     # get() holt den Wert oder 0 wenn nicht vorhanden — sicherer als []
     vorhanden = ressourcen_dict.get(ressourcen_name, 0)
     return vorhanden >= benoetigte_menge
+
+def _gebaeude_name_fuer_index(typ_index):
+    """Kleine Hilfsfunktion: gibt den Gebäude-Namen für einen Index zurück."""
+    namen = ["Basis", "Reaktor", "Farm", "Holzfaeller",
+             "Steinmetz", "Marktplatz", "Wohnhaus", "Labor"]
+    return namen[typ_index] if typ_index < len(namen) else "Unbekannt"
+
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -475,14 +481,14 @@ def kann_bauen(ressourcen_dict, liste_gebaeude, typ_index, boden_typ=None):
     # Marktplatz ab 5 Bevölkerung. Wenn noch nicht freigeschaltet → nicht bauen.
     if not ist_freigeschaltet(ressourcen_dict, typ_index):
         wirtschaft = GEBAEUDE_WIRTSCHAFT[typ_index]
-        freischaltung = wirtschaft["freischaltung"]
-        ress_name = freischaltung["ressource"]
-        menge     = freischaltung["menge"]
-        gebaeude_namen = ["Basis", "Reaktor", "Farm", "Holzfaeller",
-                          "Steinmetz", "Marktplatz", "Wohnhaus"]
-        name = gebaeude_namen[typ_index] if typ_index < len(gebaeude_namen) else "Unbekannt"
-        print(f"{name} ist noch nicht freigeschaltet!"
-              f" Brauche {menge} {ress_name}")
+        freischaltung = wirtschaft.get("freischaltung")
+        name = _gebaeude_name_fuer_index(typ_index)
+        # Freundliche Meldung über alle Freischaltungs-Arten:
+        hinweis = freischaltung_hinweis(ressourcen_dict, typ_index)
+        if hinweis:
+            print(f"{name} ist noch nicht freigeschaltet! {hinweis}")
+        else:
+            print(f"{name} ist noch nicht freigeschaltet!")
         return False
 
     # ── Prüfung 3 (NEU in Stunde 8): Passt der Bodentyp zum Gebäude? ─────
@@ -502,9 +508,7 @@ def kann_bauen(ressourcen_dict, liste_gebaeude, typ_index, boden_typ=None):
         if typ_index in boden_anforderung:
             benoetigter_boden = boden_anforderung[typ_index]
             if boden_typ != benoetigter_boden:
-                gebaeude_namen = ["Basis", "Reaktor", "Farm", "Holzfaeller",
-                                  "Steinmetz", "Marktplatz", "Wohnhaus"]
-                name = gebaeude_namen[typ_index] if typ_index < len(gebaeude_namen) else "Unbekannt"
+                name = _gebaeude_name_fuer_index(typ_index)
                 boden_namen = {0: "Erde", 1: "Gras", 2: "Gestein", 3: "Sand"}
                 benoetigt_name = boden_namen.get(benoetigter_boden, "Unbekannt")
                 print(f"{name} kann nur auf {benoetigt_name} gebaut werden!"
@@ -537,11 +541,7 @@ def kann_bauen(ressourcen_dict, liste_gebaeude, typ_index, boden_typ=None):
     # Gehe durch alle benötigten Ressourcen in den Baukosten
     for ress_name, benoetigt in baukosten.items():
         if not _hat_genug(ressourcen_dict, ress_name, benoetigt):
-            # Gebaeude-Namen aus den Indizes ableiten (ohne Import aus gebaeude.py,
-            # um Import-Zirkel zu vermeiden)
-            gebaeude_namen = ["Basis", "Reaktor", "Farm", "Holzfaeller",
-                              "Steinmetz", "Marktplatz", "Wohnhaus"]
-            name = gebaeude_namen[typ_index] if typ_index < len(gebaeude_namen) else "Unbekannt"
+            name = _gebaeude_name_fuer_index(typ_index)
             print(f"Nicht genug Ressourcen fuer {name}!"
                   f" Brauche {benoetigt} {ress_name}")
             return False
@@ -572,18 +572,13 @@ def baukosten_abziehen(ressourcen_dict, typ_index):
         ressourcen_dict  — das Ressourcen-Dictionary (wird verändert!)
         typ_index        — welcher Gebäude-Typ wird gebaut?
                            (0=Basis, 1=Reaktor, 2=Farm, 3=Holzfaeller,
-                            4=Steinmetz, 5=Marktplatz, 6=Wohnhaus)
+                            4=Steinmetz, 5=Marktplatz, 6=Wohnhaus, 7=Labor)
     """
     wirtschaft = GEBAEUDE_WIRTSCHAFT[typ_index]
     baukosten = wirtschaft["baukosten"]
-    
-    # Gebaeude-Namen aus den Indizes ableiten (ohne Import aus gebaeude.py)
-    # WICHTIG (Stunde 9): Alle 7 Einträge 0-6, damit auch der Marktplatz (5)
-    # richtig benannt wird — sonst stünde dort "Unbekannt".
-    gebaeude_namen = ["Basis", "Reaktor", "Farm", "Holzfaeller",
-                      "Steinmetz", "Marktplatz", "Wohnhaus"]
-    name = gebaeude_namen[typ_index] if typ_index < len(gebaeude_namen) else "Unbekannt"
-    
+
+    name = _gebaeude_name_fuer_index(typ_index)
+
     # Gehe durch alle benötigten Ressourcen und ziehe sie ab
     for ress_name, kosten in baukosten.items():
         aktueller_wert = ressourcen_dict.get(ress_name, 0)
@@ -660,18 +655,20 @@ def ressourcen_produzieren(ressourcen_dict, liste_gebaeude):
             
             # Dann: Produzierte Ressourcen hinzufügen
             produktion = wirtschaft["produktion"]
+            # Stunde 10: Wenn "produktion" erforscht ist, gibt es +25% Bonus!
+            if forschung.ist_technologie_erforscht("produktion"):
+                boost = 1.25
+            else:
+                boost = 1.0
             for ress_name, menge in produktion.items():
                 aktuell = ressourcen_dict.get(ress_name, 0)
-                ressourcen_dict[ress_name] = aktuell + menge
+                ressourcen_dict[ress_name] = aktuell + int(menge * boost)
         
         else:
             # Gebäude kann nicht produzieren — Grund ausgeben
             # Wir brauchen den Namen aus gebaeude.py... aber wir importieren
             # gebaeude.py hier NICHT (sonst gäbe es einen Import-Zirkel).
-            # Stattdessen geben wir nur den Index aus — das reicht zum Testen.
-            gebaeude_namen = ["Basis", "Reaktor", "Farm", "Holzfaeller",
-                              "Steinmetz", "Marktplatz", "Wohnhaus"]
-            name = gebaeude_namen[typ_index] if typ_index < len(gebaeude_namen) else "Unbekannt"
+            name = _gebaeude_name_fuer_index(typ_index)
             print(f"{name} (Typ {typ_index}): Nicht genug Rohstoffe "
                   f"→ produziert nichts in diesem Tick")
 
@@ -698,4 +695,10 @@ def ressourcen_produzieren(ressourcen_dict, liste_gebaeude):
 #       Sonst gibt es Gold geschenkt.
 #   ✗ "freischaltung"-Feld im Wörterbuch vergessen → KeyError beim Zugriff
 #     → deshalb nutzen wir wirtschaft.get("freischaltung") (liefert None).
+#
+# Stunde 10 (NEU):
+#   ✓ "freischaltung" kann jetzt {"typ": "forschung", ...} oder eine Liste sein
+#   ✓ ist_freigeschaltet() prüft beide Formen + ruft forschung.ist_technologie_erforscht()
+#   ✓ freischaltung_hinweis() gibt lesbare Meldungen für beide Typen
+#   ✓ 25% Produktions-Bonus wenn Technologie "produktion" erforscht ist
 # =============================================================================

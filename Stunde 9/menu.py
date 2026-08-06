@@ -185,12 +185,12 @@ def menu_zeichnen(gebaeude_typen, gebaeude_wirtschaft, ressourcen_dict=None):
         else:
             kosten_string = "kostenlos"
 
-        # ── Freischaltungs-Hinweis (wenn gesperrt) ────────────────────────
+        # ── Freischaltungs-Hinweis (wenn gesperrt) — NEU in Stunde 10 ─────
+        # Statt einfach nur die Rohstoffmenge anzuzeigen, fragen wir
+        # ressourcen.freischaltung_hinweis() — das kann auch
+        # "Benötigt Technologie: Wohnbau" zurückgeben!
         if not freigeschaltet:
-            freischaltung = gebaeude_wirtschaft[i]["freischaltung"]
-            braucht_ress = freischaltung["ressource"]
-            braucht_menge = freischaltung["menge"]
-            hinweis = f"  🔒 braucht {braucht_menge} {_ressourcen_name(braucht_ress)}"
+            hinweis = "  🔒 " + ressourcen.freischaltung_hinweis(ressourcen_dict, i)
         else:
             hinweis = ""
 
@@ -223,7 +223,7 @@ def _ressourcen_name(ress_name):
         "stein":         "Stein",
         "bevoelkerung":  "Bevoelkerung",
         "nahrung":       "Nahrung",
-        "arbeiter":      "Arbeiter",
+        "forschung":     "Forschungspunkte",
     }
     return namen.get(ress_name, ress_name)
 

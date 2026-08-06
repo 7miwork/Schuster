@@ -75,6 +75,7 @@ import gebaeude     # Gebäude-Modul aus Stunde 3 (+ Stunde 6)
 import hud          # HUD-Modul aus Stunde 4 (+ Stunde 6)
 import ressourcen   # Ressourcen-Modul aus Stunde 5 (+ Stunde 6)
 import menu         # Baumenü-Modul — NEU in Stunde 9
+import forschung    # Forschungs-Modul — NEU in Stunde 10
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -191,14 +192,14 @@ sterne_liste = []
 # Startwert = 20, damit der Steinmetz direkt nach dem Bau loslegen kann.
 #
 # Neu in Stunde 7: Der Rohstoff "bevoelkerung" kommt dazu!
-# Startwert = 0 — damit die Kolonie nicht ganz leer ist.
-# Neu in Stunde 7: Der Rohstoff "bevoelkerung" kommt dazu!
-# Startwert = 10 — damit der Spieler direkt ein paar Arbeiter hat
+# Startwert = 10 — damit der Spieler direkt ein paar Bewohner hat
 # für die ersten Produktionsgebäude.
 #
 # Neu in Stunde 8: Der Rohstoff "nahrung" kommt dazu!
 # Startwert = 50 — damit die ersten Wohnhäuser versorgt werden können.
-ressourcen_dict = {"gold": 100, "energie": 50, "holz": 30, "stein": 20, "bevoelkerung": 10, "nahrung": 50}
+# Neu in Stunde 10: Der Rohstoff "forschung" kommt dazu!
+# Startwert = 0 — Forschungspunkte werden im Labor produziert.
+ressourcen_dict = {"gold": 100, "energie": 50, "holz": 30, "stein": 20, "bevoelkerung": 10, "nahrung": 50, "forschung": 0}
 
 # ├────────────────────────────────────────────────────────────────────────────
 # │ STUNDE 3 — NEUE VARIABLEN                                                 │
@@ -213,8 +214,8 @@ ressourcen_dict = {"gold": 100, "energie": 50, "holz": 30, "stein": 20, "bevoelk
 
 liste_gebaeude = []       # Alle Gebäude auf der Karte
 # Neu in Stunde 7: 0=Basis, 1=Reaktor, 2=Farm, 3=Holzfaeller,
-#                   4=Steinmetz, 5=Marktplatz, 6=Wohnhaus
-gebaeude_auswahl = 0      # Welches Gebäude ist ausgewählt? (0-6)
+#                   4=Steinmetz, 5=Marktplatz, 6=Wohnhaus, 7=Labor
+gebaeude_auswahl = 0      # Welches Gebäude ist ausgewählt? (0-7)
 maus_x = 0                # Maus-X-Position auf dem Bildschirm
 maus_y = 0                # Maus-Y-Position auf dem Bildschirm
 klick_x = -1              # Zuletzt angeklickte Kachel (Spalte)
@@ -233,6 +234,7 @@ klick_y = -1              # Zuletzt angeklickte Kachel (Zeile)
 #   2 = doppelt so schnell (alle 30 Frames)
 tick_zaehler = 0
 spiel_geschwindigkeit = 1   # Normal-Geschwindigkeit
+_hilfe_offen = False         # NEU St. 10: Hilfe-Overlay ein/aus
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -458,6 +460,9 @@ def ereignisse_verarbeiten():
             if ereignis.key == pygame.K_7:
                 gebaeude_auswahl = 6
                 print("Gebäude-Auswahl: Wohnhaus (Taste 7)")
+            if ereignis.key == pygame.K_8:
+                gebaeude_auswahl = 7
+                print("Gebäude-Auswahl: Labor (Taste 8)")
 
             # ── STUNDE 9 — NEU: TAB öffnet/schließt das Baumenü ────────────
             # Verbesserungsvorschlag 3: Mit TAB sieht man ALLE Gebäudetypen
@@ -465,6 +470,26 @@ def ereignisse_verarbeiten():
             # menu.menu_umschalten() togglet den Zustand (_menu_offen).
             if ereignis.key == pygame.K_TAB:
                 menu.menu_umschalten()
+
+            # ── STUNDE 10 — NEU: F öffnet/schließt das Forschungsmenü ───────
+            # Mit der Taste F kann man neue Technologien erforschen.
+            if ereignis.key == pygame.K_f:
+                forschung.forschung_menu_umschalten()
+
+            # ── STUNDE 10 — NEU: F1/F2/F3 erforscht eine Technologie ───────
+            # Nur wirksam, wenn das Forschungsmenü offen ist.
+            if forschung.forschung_menu_ist_offen():
+                if ereignis.key == pygame.K_F1:
+                    forschung.technologie_erforschen("wohnbau", ressourcen_dict)
+                elif ereignis.key == pygame.K_F2:
+                    forschung.technologie_erforschen("produktion", ressourcen_dict)
+                elif ereignis.key == pygame.K_F3:
+                    forschung.technologie_erforschen("stein_effizienz", ressourcen_dict)
+
+            # ── STUNDE 10 — NEU: H öffnet/schließt die Hilfe ────────────────
+            if ereignis.key == pygame.K_h:
+                global _hilfe_offen
+                _hilfe_offen = not _hilfe_offen
             
             # ── STUNDE 8 — NEU: Pause/Start/Beschleunigung ─────────────────
             # Mit der Leertaste kann pausiert werden
@@ -659,6 +684,9 @@ def spiel_starten():
     # Ohne diesen Aufruf bleibt _fenster in menu.py auf None und das
     # Baumenü würde beim Öffnen (Taste TAB) nichts zeichnen.
     menu.menu_initialisieren(fenster)
+
+    # Forschungs-Modul initialisieren (NEU in Stunde 10)
+    forschung.forschung_initialisieren(fenster)
     
     print("Spiel gestartet! Drücke ESC zum Beenden.")
     print(f"Karte: {KARTE_BREITE} x {KARTE_HOEHE} Kacheln = "
@@ -712,8 +740,66 @@ def spiel_starten():
                            ressourcen.GEBAEUDE_WIRTSCHAFT,
                            ressourcen_dict)
 
+        # Das Forschungsmenü — GANZ ZULETZT (NEU in Stunde 10)
+        # Liegt über dem Baumenü, wenn es offen ist.
+        forschung.forschung_menu_zeichnen(ressourcen_dict,
+                                           gebaeude.GEBAEUDE_TYPEN)
+
+        # Die Hilfe — GANZ ZULETZT (NEU in Stunde 10)
+        # Wird bei Taste H ein-/ausgeblendet.
+        if _hilfe_offen:
+            hilfe_zeichnen()
+
         pygame.display.flip()
         uhr.tick(BILDER_PRO_SEKUNDE)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# BLOCK: HILFE ANZEIGE
+# ═════════════════════════════════════════════════════════════════════════════
+
+def hilfe_zeichnen():
+    """
+    Zeichnet ein halbtransparentes Hilfe-Overlay mit allen Tasten und
+    ihrer Funktion — wie ein Spickzettel für neue Spieler.
+
+    Wird bei Taste H ein-/ausgeblendet.
+    """
+    overlay = pygame.Surface(fenster.get_size(), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 180))
+    fenster.blit(overlay, (0, 0))
+
+    schrift_gross  = pygame.font.Font(None, 36)
+    schrift_normal = pygame.font.Font(None, 24)
+
+    titel = schrift_gross.render("HILFE — Steuerung", True, (255, 255, 100))
+    fenster.blit(titel, (30, 25))
+
+    zeilen = [
+        "Tasten 1-8  — Gebäude auswählen (1=Basis, 2=Reaktor, ..., 8=Labor)",
+        "TAB         — Baumenü öffnen/schließen",
+        "F           — Forschungsmenü öffnen/schließen",
+        "F1 / F2 / F3 — Technologie erforschen (wenn Forschungsmenü offen)",
+        "H           — Diese Hilfe ein-/ausblenden",
+        "ESC         — Spiel beenden",
+        "",
+        "Maus        — Linksklick = Gebäude bauen",
+        "             Rechtsklick = Gebäude abreißen (50% zurück)",
+        "Pfeiltasten / WASD — Kamera scrollen",
+        "Mausrand    — Automatisch scrollen am Bildschirmrand",
+        "B           — Springe zur Basis",
+        "Leertaste   — Pause / Start",
+        "1 / 2       — Geschwindigkeit 1x / 2x",
+    ]
+
+    y = 80
+    for zeile in zeilen:
+        text = schrift_normal.render(zeile, True, (220, 220, 220))
+        fenster.blit(text, (50, y))
+        y += 28
+
+    hinweis = schrift_normal.render("(H drücken zum Schließen)", True, (150, 150, 150))
+    fenster.blit(hinweis, (50, y + 10))
 
 
 # ═════════════════════════════════════════════════════════════════════════════
