@@ -13,6 +13,7 @@
 | `ressourcen.py` | Modul: Wirtschaft, Baukosten, Produktion        |
 | `menu.py`       | Modul: Baumenü (TAB)                            |
 | `forschung.py`  | Modul: Forschungsmenü (F)                       |
+| `bilder/`       | PNG-Bilder für die Gebäude                     |
 | `README.md`     | Diese Datei — Projektübersicht                  |
 
 ---
@@ -67,7 +68,7 @@ Benötigt: Python 3 und Pygame (`pip install pygame`)
 | **Rechte Maustaste** | **Gebäude abreißen (50 % der Baukosten zurück!)** |
 | **`TAB`**        | **Baumenü öffnen/schließen (zeigt alle Gebäudetypen)** |
 | **`F`**          | **Forschungsmenü öffnen/schließen — NEU!** |
-| **`F1` / `F2` / `F3`** | **Technologie erforschen (wenn Forschungsmenü offen) — NEU!** |
+| **`F1` bis `F5`** | **Technologie erforschen (wenn Forschungsmenü offen) — NEU!** |
 | **`H`**          | **Hilfe ein-/ausblenden (Spickzettel) — NEU!** |
 | `1`              | Gebäude-Typ: Basis (blau)     |
 | `2`              | Gebäude-Typ: Reaktor (gelb)   |
@@ -76,7 +77,9 @@ Benötigt: Python 3 und Pygame (`pip install pygame`)
 | `5`              | Gebäude-Typ: Steinmetz (grau) |
 | `6`              | Gebäude-Typ: Marktplatz (sandgold) |
 | `7`              | Gebäude-Typ: Wohnhaus (violett) |
-| `8`              | Gebäude-Typ: Labor (hellblau-cyan) — NEU! |
+| `8`              | Gebäude-Typ: Universität (hellblau-cyan) — NEU! |
+| `9`              | Gebäude-Typ: Mine (Kohle und Eisen) — nach Minenbau |
+| `0`              | Gebäude-Typ: Straße |
 | `B`              | Kamera sofort zur Basis zentrieren |
 | `Leertaste`      | Pause / Start                 |
 | `1` / `2`        | Geschwindigkeit 1× / 2×       |
@@ -98,7 +101,10 @@ Benötigt: Python 3 und Pygame (`pip install pygame`)
 | H      | Holzfäller  | Braun       | 10 Gold + 5 Energie    | +6 Holz         | −2 Energie      | unbegrenzt  | Sofort |
 | S      | Steinmetz   | Grau        | 15 Gold + 10 Energie   | +5 Stein        | −3 Energie      | unbegrenzt  | Sofort |
 | M      | Marktplatz  | Sandgold    | 30 Gold + 15 Energie   | +12 Gold        | −5 Stein        | unbegrenzt  | ab **5 Bevölkerung** |
-| W      | Wohnhaus    | Violett     | 20 Gold + 15 Holz + 10 Stein | +2 Bevölkerung | −3 Energie | unbegrenzt  | ab **20 Holz** |
+| W      | Wohnhaus    | Violett     | 20 Gold + 15 Holz + 10 Stein | +1 Bevölkerung | −3 Energie, −2 Nahrung | max. 10 | ab **5 Bevölkerung** |
+| L      | Universität | Hellblau-Cyan | 40 Gold + 20 Energie | +5 Forschung | −2 Gold, −3 Energie | unbegrenzt | ab 5 Bevölkerung + 40 Gold |
+| M      | Mine        | Grau        | 35 Gold + 10 Energie + 15 Stein | +2 Kohle, alle 10 Ticks +1 Eisen | – | unbegrenzt | Forschung „Minenbau“ |
+| S      | Straße      | Dunkelgrau  | 2 Stein                | –               | –               | unbegrenzt  | Sofort |
 
 > **Wichtig:** Wenn der nötige Rohstoff zum Verbrauchen fehlt (z.B. keine Energie für den Holzfäller), produziert das Gebäude in diesem Tick NICHTS. Ressourcenwerte fallen nie unter 0!
 
@@ -106,7 +112,7 @@ Benötigt: Python 3 und Pygame (`pip install pygame`)
 
 ## Rohstoffe
 
-Das Spiel hat jetzt **6 Rohstoffe**, die miteinander verbunden sind:
+Das Spiel hat jetzt **9 Rohstoffe**, die miteinander verbunden sind:
 
 | Rohstoff     | Farbe       | Wofür?                                                |
 |--------------|-------------|-------------------------------------------------------|
@@ -116,6 +122,8 @@ Das Spiel hat jetzt **6 Rohstoffe**, die miteinander verbunden sind:
 | Stein        | Grau        | Wird von Steinmetzen produziert — wird in späteren Stunden wichtig |
 | Bevölkerung  | Rosa        | Wird von Wohnhäusern produziert — die Kolonie wächst! |
 | Forschung    | Hellblau    | Wird im Labor produziert — für neue Technologien im Forschungsmenü (Taste F) |
+| Kohle        | Dunkelgrau  | Wird von Minen produziert — wird für verbesserte Reaktoren gebraucht |
+| Eisen        | Rostbraun   | Wird von Minen alle 10 Wirtschaftsticks produziert |
 
 **Zusammenhang:** Farmen → Gold → Reaktoren + Holzfäller + Steinmetze + Marktplatz → Energie + Holz + Stein + Gold → Wohnhäuser → Bevölkerung + Forschung → Kreislauf schließt sich!
 
@@ -146,10 +154,13 @@ Das Spiel hat jetzt **6 Rohstoffe**, die miteinander verbunden sind:
 - **Meldungssystem** im HUD (`hud.meldung_anzeigen()`): rote Meldung, wenn zu wenig Rohstoffe zum Bauen da sind.
 - **Stufenweise Freischaltung**: jedes Gebäude hat ein Feld `freischaltung` (z.B. Marktplatz ab 5 Bevölkerung, Wohnhaus ab 20 Holz). `ist_freigeschaltet()` prüft das.
 
-**Stunde 10 (abgeschlossen):** Forschungssystem hinzugefügt:
-- **Neues Gebäude: Labor** (Taste 8): produziert die Ressource **Forschungspunkte**.
-- **Neues Modul `forschung.py`**: Forschungsmenü mit Taste `F`, Technologien mit F1/F2/F3 erforschen.
-- **Technologie-Baum**: Wohnbau (schaltet Wohnhaus frei), Produktions-Boost (+25%), Stein-Effizienz.
+**Stunde 10 (abgeschlossen):** Forschungssystem und neue Gebäude hinzugefügt:
+- **Neue Gebäude:** Universität (Taste 8), Mine (Taste 9) und Straße (Taste 0).
+- **Vorhandene PNG-Bilder** aus `bilder/` werden auf den Gebäudekacheln angezeigt.
+- **Neues Modul `forschung.py`**: Forschungsmenü mit Taste `F`, Technologien mit F1 bis F5 erforschen.
+- **Technologie-Baum:** Wohnbau, Produktions-Boost, Stein-Effizienz, Minenbau und Verbesserter Reaktor.
+- **Mine:** produziert Kohle und nach jeweils zehn Wirtschaftsticks zusätzlich Eisen.
+- **Verbesserter Reaktor:** produziert mehr Energie, verbraucht dafür Kohle.
 - **Freischaltung erweitert**: Gebäude können jetzt auch durch Technologien (`{"typ": "forschung", ...}`) oder durch **Listen** von Bedingungen (UND-Verknüpfung) freigeschaltet werden.
 - **Hilfe-Menü** mit Taste `H`: zeigt alle Tasten und ihre Funktion.
 - **Ressourcen-Bonus**: Wenn die Technologie "Produktions-Boost" erforscht ist, produzieren alle Gebäude 25 % mehr.
@@ -169,7 +180,7 @@ Die ersten Minuten sind die schwersten. Hier eine bewährte Reihenfolge:
 3. **Achte auf deine Energie!** Reaktoren verbrauchen Holz, Holzfäller/Farmen/Steinmetze verbrauchen Energie. Baue immer erst einen Reaktor, bevor du Verbraucher baust.
 4. **Wohnhaus** freischaltet sich ab **5 Bevölkerung** — hab etwas Geduld oder baue es, sobald du genug Gold, Holz und Stein hast.
 5. **Marktplatz** (ab 5 Bevölkerung) produziert passiv Gold — sehr nützlich, aber er braucht Stein.
-6. **Labor** (ab 5 Bevölkerung + 40 Gold) gibt dir Forschungspunkte für neue Technologien.
+6. **Universität** (ab 5 Bevölkerung + 40 Gold) gibt dir Forschungspunkte für neue Technologien.
 7. **Drücke `H`** wenn du nicht weiterweißt — die Hilfe zeigt dir alle Tasten!
 
 > **Merke:** Immer schön die Ressourcen oben im Auge behalten. Wenn eine Ressource rot wird oder fehlt, produziert das Gebäude in diesem Tick NICHTS.
