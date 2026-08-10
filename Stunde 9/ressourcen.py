@@ -124,7 +124,7 @@ GEBAEUDE_WIRTSCHAFT = [
     {
         "baukosten":  {"gold": 20},            # Baukosten
         "produktion": {"energie": 5},          # Produziert Energie
-        "verbrauch":  {"holz": 2},  # Verbraucht Holz
+        "verbrauch":  {"holz": 2},             # Verbraucht Holz
         "max_anzahl": None,                    # Beliebig oft baubar
         "freischaltung": None,                 # NEU St. 9: sofort verfügbar
     },
